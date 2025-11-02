@@ -9,6 +9,7 @@ import com.example.skillshare.ui.screens.*
 import com.example.skillshare.ui.screens.booking.BookingScreen
 import com.example.skillshare.ui.screens.details.TrainerDetailScreen
 import com.example.skillshare.ui.screens.mybookings.MyBookingsScreen
+import com.example.skillshare.ui.screens.payment.PaymentScreen
 import com.example.skillshare.ui.screens.profiles.LearnerProfileScreen
 import com.example.skillshare.ui.screens.profiles.TrainerProfileScreen
 import com.example.skillshare.ui.screens.reviews.ReviewScreen
@@ -28,5 +29,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.Reviews.route) { ReviewScreen(navController) }
         composable(Screen.LearnerProfile.route) { LearnerProfileScreen(navController) }
         composable(Screen.TrainerProfile.route) { TrainerProfileScreen(navController) }
+        composable(Screen.Payment.route) { PaymentScreen(navController) }
     }
 }
