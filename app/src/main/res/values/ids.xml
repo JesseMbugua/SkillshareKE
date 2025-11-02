@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="tvSignup" type="id" />
+    <item name="spinnerCounty" type="id" />
+    <item name="tvLogin" type="id" />
+</resources>
