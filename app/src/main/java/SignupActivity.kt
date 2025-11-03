@@ -21,7 +21,7 @@ class SignupActivity : AppCompatActivity() {
         val signUpBtn = findViewById<Button>(R.id.btnSignUp)
         val loginTv = findViewById<TextView>(R.id.tvLogin)
 
-        // All 47 Kenyan counties in alphabetical order
+
         val counties = arrayOf(
             "Select County",
             "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo Marakwet", "Embu",

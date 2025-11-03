@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/purple_500"
+    android:scaleType="centerCrop"
     tools:context=".SignupActivity">
 
     <LinearLayout
@@ -59,11 +60,18 @@
                 android:textColorHint="@color/black"/>
 
             <Spinner
-                android:id="@+id/spCounty"
+                android:id="@+id/spinnerCounty"
+                android:spinnerMode="dropdown"
+                android:drawableStart="@drawable/ic_location_on"
+                android:drawablePadding="10dp"
+                android:padding="12dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="Enter County"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/rounded_edittext"/>
+                android:background="@drawable/rounded_edittext"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black"/>
 
             <EditText
                 android:id="@+id/etEmail"
