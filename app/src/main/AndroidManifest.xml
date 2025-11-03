@@ -11,8 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Skillshare">
-
-
+        <!--
         <activity
             android:name=".LoginActivity"
             android:exported="true"
@@ -26,25 +25,27 @@
 
         <activity
             android:name=".SignupActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Skillshare" >
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>/>
-    </activity>
+            android:exported="false"
+           />
+           -->
 
+
+
+        <activity android:name=".LoginActivity" android:exported="false" />
+        <activity android:name=".SignupActivity" android:exported="false" />
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Skillshare"
-            >
+            android:theme="@style/Theme.Skillshare">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
+
 
     </application>
 

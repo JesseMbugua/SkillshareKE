@@ -1,12 +1,18 @@
 package com.example.skillshare.navigation
 
-sealed class Screen(val route: String, val title: String) {
-    object Search : Screen("search", "Discover")
-    object Details : Screen("details", "Details")
-    object Booking : Screen("booking", "Book")
-    object MyBookings : Screen("my_bookings", "My Bookings")
+sealed class Screen(
+    val route: String,
+    val title: String
+) {
+
+    object Login : Screen("login", "Login")
+    object Signup : Screen("signup", "Signup")
+    object Search : Screen("search", "Search")
+    object MyBookings : Screen("my_bookings", "Bookings")
     object Reviews : Screen("reviews", "Reviews")
-    object LearnerProfile : Screen("learner_profile", "My Profile")
-    object TrainerProfile : Screen("trainer_profile", "Trainer Profile")
+    object LearnerProfile : Screen("learner_profile", "Profile")
+    object Details : Screen("details", "Details")
+    object Booking : Screen("booking", "Booking")
+    object TrainerProfile : Screen("trainer_profile", "Trainer")
     object Payment : Screen("payment", "Payment")
 }

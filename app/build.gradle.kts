@@ -46,29 +46,32 @@ android {
 }
 
 dependencies {
-    // Core Android
+    // --- Android Core ---
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
 
-    // --- Firebase Libraries ---
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.storage)
+    // --- Firebase BoM (manages all Firebase versions automatically) ---
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
 
-    // Jetpack Compose
+    // --- Firebase Libraries (no versions needed) ---
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // --- Jetpack Compose ---
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.compose.ui:ui:1.7.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.7.4")
     implementation("androidx.compose.material3:material3:1.3.0")
 
-    // Navigation Compose
+    // --- Navigation Compose ---
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
-    // Lifecycle Compose
+    // --- Lifecycle Compose ---
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.5")
 
-    // Tooling and Tests
+    // --- Testing ---
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.4")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.4")
     testImplementation("junit:junit:4.13.2")
@@ -76,7 +79,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.4")
 
-    //Colors
+    // --- Colors & System UI ---
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.33.2-alpha")
-
 }
+

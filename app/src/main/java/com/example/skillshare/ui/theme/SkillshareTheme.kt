@@ -15,7 +15,7 @@ val DarkPurple = Color(0xFF6A1B9A)
 val Cream = Color(0xFFFFFBEA)
 val White = Color(0xFFFFFFFF)
 
-// 🌞 Light mode
+
 private val LightColors = lightColorScheme(
     primary = LightPurple,
     onPrimary = White,
@@ -27,7 +27,7 @@ private val LightColors = lightColorScheme(
     onSurface = DarkPurple
 )
 
-// 🌙 Dark mode
+
 private val DarkColors = darkColorScheme(
     primary = DarkPurple,
     onPrimary = White,
@@ -48,7 +48,7 @@ fun SkillShareTheme(
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = !darkTheme
 
-    // ✅ Apply light purple status bar after composition
+
     SideEffect {
         systemUiController.setStatusBarColor(
             color = LightPurple,

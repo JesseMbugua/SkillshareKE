@@ -14,14 +14,22 @@ import com.example.skillshare.ui.screens.profiles.LearnerProfileScreen
 import com.example.skillshare.ui.screens.profiles.TrainerProfileScreen
 import com.example.skillshare.ui.screens.reviews.ReviewScreen
 import com.example.skillshare.ui.screens.search.SearchScreen
+import com.example.skillshare.ui.screens.auth.LoginScreen
+import com.example.skillshare.ui.screens.auth.SignupScreen
+
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Search.route,
+        startDestination = Screen.Login.route, // ⬅ start from login screen
         modifier = modifier
     ) {
+        // Auth routes
+        composable(Screen.Login.route) { LoginScreen(navController) }
+        composable(Screen.Signup.route) { SignupScreen(navController) }
+
+        // Main app routes
         composable(Screen.Search.route) { SearchScreen(navController) }
         composable(Screen.Details.route) { TrainerDetailScreen(navController) }
         composable(Screen.Booking.route) { BookingScreen(navController) }
