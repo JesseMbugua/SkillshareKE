@@ -71,6 +71,10 @@ dependencies {
     // --- Lifecycle Compose ---
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.5")
 
+    // --- Networking ---
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
     // --- Testing ---
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.4")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.4")
@@ -82,4 +86,3 @@ dependencies {
     // --- Colors & System UI ---
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.33.2-alpha")
 }
-
