@@ -9,7 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.skillshare.navigation.Screen // ✅ Import Screen
+import com.example.skillshare.navigation.Screen
+import at.favre.lib.crypto.bcrypt.BCrypt
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -18,6 +19,7 @@ fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -30,39 +32,75 @@ fun LoginScreen(navController: NavController) {
             Text("Welcome Back 👋", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(32.dp))
 
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(24.dp))
 
             Button(
                 onClick = {
                     if (email.isEmpty() || password.isEmpty()) {
-                        status = "Please fill all fields"
-                    } else {
-                        db.collection("users")
-                            .whereEqualTo("email", email.lowercase())
-                            .whereEqualTo("password", password)
-                            .get()
-                            .addOnSuccessListener { documents ->
-                                if (!documents.isEmpty) {
-                                    status = "Login successful!"
-                                    navController.navigate(Screen.Search.route) {
-                                        popUpTo(Screen.Login.route) { inclusive = true }
-                                    }
+                        status = " Please fill all fields"
+                        return@Button
+                    }
+
+                    loading = true
+                    val emailLower = email.trim().lowercase()
+
+                    db.collection("users")
+                        .whereEqualTo("email", emailLower)
+                        .limit(1)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            loading = false
+                            if (documents.isEmpty) {
+                                status = "No user found with that email"
+                            } else {
+                                val userDoc = documents.documents[0]
+                                val storedHash = userDoc.getString("passwordHash")
+
+                                if (storedHash.isNullOrEmpty()) {
+                                    status = "Password missing or invalid account data"
                                 } else {
-                                    status = "Invalid credentials"
+                                    val result = BCrypt.verifyer()
+                                        .verify(password.toCharArray(), storedHash)
+
+                                    if (result.verified) {
+                                        status = "Login successful!"
+                                        val role = userDoc.getString("role") ?: "learner"
+                                        val userId = userDoc.id
+                                        println("User logged in: $userId, role=$role")
+
+                                        navController.navigate(Screen.Search.route) {
+                                            popUpTo(Screen.Login.route) { inclusive = true }
+                                        }
+                                    } else {
+                                        status = "Invalid password"
+                                    }
                                 }
                             }
-                            .addOnFailureListener { e ->
-                                status = "Error: ${e.message}"
-                            }
-                    }
+                        }
+                        .addOnFailureListener { e ->
+                            loading = false
+                            status = "Error: ${e.message}"
+                        }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !loading
             ) {
-                Text("Login")
+                Text(if (loading) "Checking..." else "Login")
             }
 
             Spacer(Modifier.height(16.dp))

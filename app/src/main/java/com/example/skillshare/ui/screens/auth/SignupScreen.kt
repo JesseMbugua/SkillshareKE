@@ -10,6 +10,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.skillshare.navigation.Screen
+import at.favre.lib.crypto.bcrypt.BCrypt
 
 @Composable
 fun SignupScreen(navController: NavController) {
@@ -21,6 +22,7 @@ fun SignupScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var county by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -52,31 +54,56 @@ fun SignupScreen(navController: NavController) {
                 onClick = {
                     if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty() || county.isEmpty()) {
                         status = "Please fill all fields"
-                    } else {
-                        val user = hashMapOf(
-                            "name" to name,
-                            "email" to email.lowercase(),
-                            "phone" to phone,
-                            "password" to password,
-                            "county" to county
-                        )
-
-                        db.collection("users")
-                            .add(user)
-                            .addOnSuccessListener {
-                                status = "Account created!"
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(Screen.Signup.route) { inclusive = true }
-                                }
-                            }
-                            .addOnFailureListener { e ->
-                                status = "Error: ${e.message}"
-                            }
+                        return@Button
                     }
+
+                    loading = true
+                    val emailLower = email.trim().lowercase()
+
+
+                    db.collection("users")
+                        .whereEqualTo("email", emailLower)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            if (!documents.isEmpty) {
+                                loading = false
+                                status = " Email already exists"
+                            } else{
+                                val bcryptHash = BCrypt.withDefaults().hashToString(12, password.toCharArray())
+
+                                val user = hashMapOf(
+                                    "name" to name.trim(),
+                                    "email" to emailLower,
+                                    "phone" to phone.trim(),
+                                    "passwordHash" to bcryptHash,
+                                    "county" to county.trim(),
+                                    "role" to "learner",
+                                    "createdAt" to System.currentTimeMillis()
+                                )
+                                db.collection("users")
+                                    .add(user)
+                                    .addOnSuccessListener {
+                                        loading = false
+                                        status = "Account created!"
+                                        navController.navigate(Screen.Login.route) {
+                                            popUpTo(Screen.Signup.route) { inclusive = true }
+                                        }
+                                    }
+                                    .addOnFailureListener { e ->
+                                        loading = false
+                                        status = "Error: ${e.message}"
+                                    }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            loading = false
+                            status = "Error checking email: ${e.message}"
+                        }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !loading
             ) {
-                Text("Sign Up")
+                Text(if (loading) "Please wait..." else "Sign Up")
             }
 
             Spacer(Modifier.height(16.dp))
