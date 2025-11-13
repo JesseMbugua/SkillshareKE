@@ -52,13 +52,16 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
 
-    // --- Firebase BoM (manages all Firebase versions automatically) ---
-    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    // bcrypt dependency for password hashing.
+    implementation("at.favre.lib:bcrypt:0.9.0")
 
-    // --- Firebase Libraries (no versions needed) ---
+    // Firebase stuff
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
 
     // --- Jetpack Compose ---
     implementation("androidx.activity:activity-compose:1.9.2")
