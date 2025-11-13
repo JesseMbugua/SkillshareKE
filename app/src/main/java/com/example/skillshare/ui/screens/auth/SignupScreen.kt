@@ -1,6 +1,5 @@
 package com.example.skillshare.ui.screens.auth
 
-import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -9,8 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.firestore.FirebaseFirestore
 import com.example.skillshare.navigation.Screen
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavController) {
     val db = FirebaseFirestore.getInstance()
@@ -19,8 +19,26 @@ fun SignupScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var county by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("User") }
+    var expandedRole by remember { mutableStateOf(false) }
+
+    var selectedCounty by remember { mutableStateOf("") }
+    var expandedCounty by remember { mutableStateOf(false) }
+
     var status by remember { mutableStateOf("") }
+
+    val counties = listOf(
+        "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu",
+        "Garissa", "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho",
+        "Kiambu", "Kilifi", "Kirinyaga", "Kisii", "Kisumu", "Kitui", "Kwale",
+        "Laikipia", "Lamu", "Machakos", "Makueni", "Mandera", "Marsabit",
+        "Meru", "Migori", "Mombasa", "Murang’a", "Nairobi", "Nakuru",
+        "Nandi", "Narok", "Nyamira", "Nyandarua", "Nyeri", "Samburu",
+        "Siaya", "Taita-Taveta", "Tana River", "Tharaka-Nithi", "Trans Nzoia",
+        "Turkana", "Uasin Gishu", "Vihiga", "Wajir", "West Pokot"
+    )
+
+    val roles = listOf("User", "Trainer")
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -33,24 +51,110 @@ fun SignupScreen(navController: NavController) {
             Text("Create Account", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(24.dp))
 
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Full Name") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone (+254...)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Phone (+254...)") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(value = county, onValueChange = { county = it }, label = { Text("County") }, modifier = Modifier.fillMaxWidth())
+            // Role dropdown
+            ExposedDropdownMenuBox(
+                expanded = expandedRole,
+                onExpandedChange = { expandedRole = !expandedRole }
+            ) {
+                OutlinedTextField(
+                    value = selectedRole,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Select Role") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRole) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedRole,
+                    onDismissRequest = { expandedRole = false }
+                ) {
+                    roles.forEach { role ->
+                        DropdownMenuItem(
+                            text = { Text(role) },
+                            onClick = {
+                                selectedRole = role
+                                expandedRole = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+
+            ExposedDropdownMenuBox(
+                expanded = expandedCounty,
+                onExpandedChange = { expandedCounty = !expandedCounty }
+            ) {
+                OutlinedTextField(
+                    value = selectedCounty,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Select County") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCounty) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedCounty,
+                    onDismissRequest = { expandedCounty = false }
+                ) {
+                    counties.forEach { county ->
+                        DropdownMenuItem(
+                            text = { Text(county) },
+                            onClick = {
+                                selectedCounty = county
+                                expandedCounty = false
+                            }
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty() || county.isEmpty()) {
+                    if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty() ||
+                        selectedCounty.isEmpty() || selectedRole.isEmpty()
+                    ) {
                         status = "Please fill all fields"
                     } else {
                         val user = hashMapOf(
@@ -58,7 +162,8 @@ fun SignupScreen(navController: NavController) {
                             "email" to email.lowercase(),
                             "phone" to phone,
                             "password" to password,
-                            "county" to county
+                            "county" to selectedCounty,
+                            "role" to selectedRole
                         )
 
                         db.collection("users")
@@ -80,6 +185,7 @@ fun SignupScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(16.dp))
+
             TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
                 Text("Already have an account? Log in")
             }
