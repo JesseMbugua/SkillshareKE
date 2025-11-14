@@ -14,10 +14,11 @@ val LightPurple = Color(0xFFD0B3FF)
 val DarkPurple = Color(0xFF6A1B9A)
 val Cream = Color(0xFFFFFBEA)
 val White = Color(0xFFFFFFFF)
+val MediumPurple = androidx.compose.ui.graphics.Color(0xFF5D3FD3)
 
 
 private val LightColors = lightColorScheme(
-    primary = LightPurple,
+    primary = MediumPurple,
     onPrimary = White,
     secondary = LightBlue,
     onSecondary = DarkPurple,
@@ -29,9 +30,9 @@ private val LightColors = lightColorScheme(
 
 
 private val DarkColors = darkColorScheme(
-    primary = DarkPurple,
+    primary = MediumPurple,
     onPrimary = White,
-    secondary = LightPurple,
+    secondary = DarkPurple,
     onSecondary = DarkPurple,
     background = Color(0xFF121212),
     onBackground = LightBlue,
@@ -51,7 +52,7 @@ fun SkillShareTheme(
 
     SideEffect {
         systemUiController.setStatusBarColor(
-            color = LightPurple,
+            color = DarkPurple,
             darkIcons = useDarkIcons
         )
         systemUiController.setNavigationBarColor(
@@ -61,7 +62,7 @@ fun SkillShareTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = lightColorScheme(),
         typography = MaterialTheme.typography,
         shapes = MaterialTheme.shapes,
         content = content

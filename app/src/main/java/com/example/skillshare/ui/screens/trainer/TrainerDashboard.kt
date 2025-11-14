@@ -5,15 +5,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.firebase.auth.FirebaseAuth
 import com.example.skillshare.navigation.Screen
+import com.example.skillshare.ui.components.BottomNavigationBar
+
+
 
 import com.google.firebase.firestore.FirebaseFirestore
 
+@OptIn(ExperimentalMaterial3Api ::class)
 @Composable
 fun TrainerDashboardScreen(navController: NavController) {
     val db = FirebaseFirestore.getInstance()
@@ -33,8 +39,8 @@ fun TrainerDashboardScreen(navController: NavController) {
             db.collection("users").document(userId).get()
                 .addOnSuccessListener { doc ->
                     trainerName = doc.getString("name") ?: ""
-                    trainerEmail = doc.getString("email") ?: ""
-                    trainerCounty = doc.getString("county") ?: ""
+                    // trainerEmail = doc.getString("email") ?: ""
+                    // trainerCounty = doc.getString("county") ?: ""
                 }
 
             db.collection("skills")
@@ -67,11 +73,18 @@ fun TrainerDashboardScreen(navController: NavController) {
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
-            Text(text = "Email: $trainerEmail")
-            Text(text = "County: $trainerCounty")
+            //Text(text = "Email: $trainerEmail")
+            //Text(text = "County: $trainerCounty")
 
             Divider()
+            Button(
+                onClick = { navController.navigate(Screen.TrainerProfile.route) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("View/Edit My Profile")
+            }
 
+            Spacer(Modifier.height(12.dp))
             // Skills section
             Text(
                 text = "My Skill Listings",
@@ -91,7 +104,10 @@ fun TrainerDashboardScreen(navController: NavController) {
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(text = skill["title"] ?: "Untitled", fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = skill["title"] ?: "Untitled",
+                                    fontWeight = FontWeight.Bold
+                                )
                                 Text(text = skill["description"] ?: "")
                                 Spacer(Modifier.height(8.dp))
                                 Button(onClick = { /* TODO: Edit skill */ }) {
@@ -105,11 +121,11 @@ fun TrainerDashboardScreen(navController: NavController) {
 
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = { navController.navigate(Screen.AddSkill.route) },
+                onClick = { navController.navigate(Screen.TrainerSkills.route) },
                 modifier = Modifier.fillMaxWidth()
 
             ) {
-                Text("Add New Skill")
+                Text("Add/Edit Skill")
             }
 
             Divider()
@@ -159,10 +175,13 @@ fun TrainerDashboardScreen(navController: NavController) {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Text("Log Out")
             }
+
+                }
+
         }
     }
-}

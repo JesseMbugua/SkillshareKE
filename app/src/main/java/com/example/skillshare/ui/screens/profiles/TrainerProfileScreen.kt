@@ -17,15 +17,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.skillshare.navigation.Screen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
 
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun TrainerProfileScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid ?: ""
     val db = FirebaseFirestore.getInstance()
@@ -50,7 +52,7 @@ fun ProfileScreen(navController: NavController) {
         if (uid.isNotBlank()) {
             db.collection("users").document(uid).get()
                 .addOnSuccessListener { doc ->
-                    name = doc.getString("name") ?: ""
+                    name = doc.getString("username") ?: ""
                     bio = doc.getString("bio") ?: ""
                     photoUrl = doc.getString("photoUrl")
                 }
@@ -72,7 +74,7 @@ fun ProfileScreen(navController: NavController) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.size(120.dp)
             ) {
-                val painter = rememberAsyncImagePainter(model = photoUrl)
+                val painter = rememberAsyncImagePainter(model = pickedUri ?: photoUrl)
                 if (photoUrl != null) {
                     Image(
                         painter = painter,
@@ -112,6 +114,16 @@ fun ProfileScreen(navController: NavController) {
                 // Save profile (and optionally upload image first)
                 loading = true
                 status = "Saving..."
+                val onSaveComplete: (String) -> Unit = { msg ->
+                    loading = false
+                    status = msg
+                    // Navigate back to the dashboard on success
+                    if (msg.contains("successfully")) {
+                        navController.navigate(Screen.TrainerDashboard.route) {
+                            popUpTo(Screen.TrainerDashboard.route) { inclusive = true }
+                        }
+                    }
+                }
                 if (pickedUri != null) {
                     val uri = pickedUri!!
                     val ref = storage.child("profile_photos/$uid.jpg")
