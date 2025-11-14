@@ -13,7 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillshare.model.Skill
 import com.example.skillshare.viewmodel.SkillListViewModel
 
-// You won't need these for the preview itself anymore
+
 // import com.example.skillshare.network.RetrofitInstance
 // import com.example.skillshare.viewmodel.SkillListViewModel
 

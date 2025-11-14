@@ -27,8 +27,8 @@ fun UserDashboardScreen(navController: NavController) {
             db.collection("users").document(userId).get()
                 .addOnSuccessListener { doc ->
                     name = doc.getString("name") ?: ""
-                    email = doc.getString("email") ?: ""
-                    county = doc.getString("county") ?: ""
+                    //email = doc.getString("email") ?: ""
+                   // county = doc.getString("county") ?: ""
                 }
         }
     }
@@ -43,9 +43,18 @@ fun UserDashboardScreen(navController: NavController) {
         ) {
             Text("Welcome, $name!", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
-            Text("Email: $email")
-            Text("County: $county")
+            //Text("Email: $email")
+           // Text("County: $county")
             Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = { navController.navigate(Screen.LearnerProfile.route) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("View/Edit My Profile")
+            }
+
+            Spacer(Modifier.height(12.dp))
             Button(
                 onClick = {
                     auth.signOut()
