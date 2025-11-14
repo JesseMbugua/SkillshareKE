@@ -1,5 +1,6 @@
 package com.example.skillshare.ui.screens.auth
 
+import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,13 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.example.skillshare.navigation.Screen
+import at.favre.lib.crypto.bcrypt.BCrypt // (for future hashed passwords)
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
     var email by remember { mutableStateOf("") }
@@ -53,27 +52,34 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     if (email.isEmpty() || password.isEmpty()) {
-                        status = "Please fill all fields"
+                        status = "❌ Please fill all fields"
                         return@Button
                     }
 
                     isLoading = true
-                    status = "Logging in..."
-                    auth.signInWithEmailAndPassword(email.lowercase(), password)
-                        .addOnSuccessListener {
-                            val userId = auth.currentUser!!.uid
 
-                            db.collection("users")
-                                .document(userId)
-                                .get()
-                                .addOnSuccessListener { doc ->
-                                    isLoading = false
+                    // 🔹 Find user by email
+                    db.collection("users")
+                        .whereEqualTo("email", email.lowercase())
+                        .limit(1)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            isLoading = false
+                            if (documents.isEmpty) {
+                                status = "❌ No user found with that email"
+                            } else {
+                                val userDoc = documents.documents[0]
+                                val storedHash = userDoc.getString("passwordHash")
+                                val role = userDoc.getString("role") ?: "learner"
 
-                                    if (doc.exists()) {
-                                        val role = doc.getString("role") ?: "user"
+                                if (storedHash != null) {
+                                    val result = BCrypt.verifyer()
+                                        .verify(password.toCharArray(), storedHash)
 
-                                        status = "Login successful!"
+                                    if (result.verified) {
+                                        status = "✅ Login successful!"
 
+                                        // Navigate based on role
                                         if (role == "trainer") {
                                             navController.navigate(Screen.TrainerDashboard.route) {
                                                 popUpTo(Screen.Login.route) { inclusive = true }
@@ -83,31 +89,27 @@ fun LoginScreen(navController: NavController) {
                                                 popUpTo(Screen.Login.route) { inclusive = true }
                                             }
                                         }
-
                                     } else {
-                                        status = "Error: User profile not found"
+                                        status = "❌ Incorrect password"
                                     }
+                                } else {
+                                    status = "❌ Invalid account data"
                                 }
-                                .addOnFailureListener { e ->
-                                    isLoading = false
-                                    status = "Error fetching profile: ${e.message}"
-                                }
-
+                            }
                         }
                         .addOnFailureListener { e ->
                             isLoading = false
-                            status = "Login failed: ${e.message}"
+                            status = "❌ Error: ${e.message}"
                         }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading
             ) {
-
                 if (isLoading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
                     )
                 } else {
                     Text("Login")
@@ -115,7 +117,6 @@ fun LoginScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(16.dp))
-
             TextButton(onClick = { navController.navigate(Screen.Signup.route) }) {
                 Text("Don’t have an account? Sign up")
             }
