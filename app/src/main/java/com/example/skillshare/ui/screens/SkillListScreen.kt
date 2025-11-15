@@ -9,19 +9,29 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillshare.model.Skill
+import com.example.skillshare.network.RetrofitInstance
 import com.example.skillshare.viewmodel.SkillListViewModel
-
-
-// import com.example.skillshare.network.RetrofitInstance
-// import com.example.skillshare.viewmodel.SkillListViewModel
 
 // This composable connects to the ViewModel (Stateful)
 @Composable
 fun SkillListScreen(
     modifier: Modifier = Modifier,
-    skillListViewModel: SkillListViewModel = viewModel()
+    // The ViewModel is now created with a custom factory to inject the ApiService
+    skillListViewModel: SkillListViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(SkillListViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return SkillListViewModel(RetrofitInstance.api) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
 ) {
     val skills by skillListViewModel.skills.collectAsState()
     // It calls the stateless composable with the current state
