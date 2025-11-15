@@ -137,7 +137,7 @@ fun TrainerSkillsScreen(navController: NavController) {
 
 @Composable
 fun SkillCard(skill: Skill, onEdit: () -> Unit, onDelete: () -> Unit) {
-    // ADD THIS LINE TO GET THE CONTEXT
+
     val context = LocalContext.current
 
     Card(modifier = Modifier.fillMaxWidth()) {

@@ -23,13 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.skillshare.navigation.Screen // Make sure this import is correct
+import com.example.skillshare.navigation.Screen
 import com.example.skillshare.ui.theme.SkillshareTheme
 import androidx.compose.ui.platform.LocalContext
 
 
 
-// --- Data Models for Dummy Data ---
+
 data class Transaction(
     val id: Int,
     val title: String,
@@ -49,7 +49,7 @@ val dummyTransactions = listOf(
     Transaction(3, "Stephanie Joy", "October 21st, 2024", "Payment", TransactionStatus.FAILED, Icons.Default.School)
 )
 
-// --- Main Dashboard Screen ---
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainerDashboard(navController: NavController) {
@@ -62,11 +62,11 @@ fun TrainerDashboard(navController: NavController) {
                 selectedItem = selectedBottomNavItem,
                 onItemSelected = { screenName ->
                     selectedBottomNavItem = screenName
-                    // --- NAVIGATION LOGIC FOR BOTTOM BAR ---
+
                     when (screenName) {
                         "Dashboard" -> navController.navigate(Screen.TrainerDashboard.route) { launchSingleTop = true }
                         "Profile" -> navController.navigate(Screen.TrainerProfile.route) { launchSingleTop = true }
-                        "Chat" -> navController.navigate(Screen.Conversations.route) { launchSingleTop = true }
+                        "Notifications" -> navController.navigate(Screen.Conversations.route) { launchSingleTop = true }
                     }
                 }
             )
@@ -89,7 +89,7 @@ fun TrainerDashboard(navController: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
             }
             item {
-                // --- NAVIGATION LOGIC FOR ACTION BUTTONS ---
+
                 ActionButtons(
                     onAddSkill = { navController.navigate(Screen.TrainerSkills.route) },
                     onViewSkills = { navController.navigate(Screen.TrainerSkills.route) }
@@ -109,7 +109,7 @@ fun TrainerDashboard(navController: NavController) {
 }
 
 
-// --- Reusable Components (Header, BalanceCard, etc. - No changes needed here) ---
+
 
 @Composable
 fun DashboardHeader(username: String, profileImageUrl: String?) {
@@ -255,11 +255,11 @@ fun TransactionItem(transaction: Transaction) {
 @Composable
 fun DashboardBottomNavigation(selectedItem: String, onItemSelected: (String) -> Unit) {
 
-    val items = listOf("Dashboard", "Transfer", "Chat", "Profile")
+    val items = listOf("Dashboard", "Transfer", "Notifications", "Profile")
     val icons = mapOf(
         "Dashboard" to Icons.Outlined.Home,
         "Transfer" to Icons.Default.SyncAlt,
-        "Chat" to Icons.Outlined.ChatBubbleOutline,
+        "Notifications" to Icons.Outlined.ChatBubbleOutline,
         "Profile" to Icons.Outlined.Person
     )
 

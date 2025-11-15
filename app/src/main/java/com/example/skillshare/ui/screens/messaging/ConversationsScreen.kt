@@ -43,7 +43,9 @@ fun ConversationsScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clickable {
-                            navController.navigate("${Screen.Payment.route}/$id") // replace with chat route
+                            navController.navigate("${Screen.Payment.route}/$id") {
+                                popUpTo(Screen.Conversations.route) { inclusive = true }
+                            }
                         }) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(title)

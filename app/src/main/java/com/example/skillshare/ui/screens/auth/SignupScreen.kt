@@ -70,7 +70,7 @@ fun SignupScreen(navController: NavController) {
             )
             Spacer(Modifier.height(12.dp))
 
-            // Role dropdown (unchanged)
+            // Role dropdown
             ExposedDropdownMenuBox(expanded = expandedRole, onExpandedChange = { expandedRole = !expandedRole }) {
                 OutlinedTextField(
                     value = selectedRole,
@@ -95,7 +95,7 @@ fun SignupScreen(navController: NavController) {
 
             Spacer(Modifier.height(12.dp))
 
-            // County dropdown (unchanged)
+            // County dropdown
             ExposedDropdownMenuBox(expanded = expandedCounty, onExpandedChange = { expandedCounty = !expandedCounty }) {
                 OutlinedTextField(
                     value = selectedCounty,

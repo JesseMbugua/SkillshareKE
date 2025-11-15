@@ -32,7 +32,7 @@ import com.example.skillshare.viewmodel.SkillListViewModel
 fun SkillListScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
-    // The ViewModel is now created with a custom factory to inject the ApiService
+
     skillListViewModel: SkillListViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -73,12 +73,12 @@ fun SkillListScreen(
     }
 }
 
-// This is your new stateless composable for the UI
+
 @Composable
 fun SkillList(skills: List<Skill>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier) {
         items(skills) { skill ->
-            // Consider creating a dedicated SkillItem composable for better structure
+
             Text(text = skill.title)
         }
     }
@@ -93,7 +93,6 @@ fun SkillListScreenPreview() {
         Skill("2", "Advanced Android", "Deep dive into Android development", 120, 75.0, "Online")
     )
 
-    // You can't preview the whole screen easily because it needs a NavController.
-    // Instead, we preview the stateless SkillList composable.
+
     SkillList(skills = dummySkills)
 }

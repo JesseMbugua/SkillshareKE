@@ -9,7 +9,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
-// 🎨 Palette
+
 val LightBlue = Color(0xFFADD8E6)
 val LightPurple = Color(0xFFD0B3FF)
 val DarkPurple = Color(0xFF6A1B9A)
