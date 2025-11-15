@@ -12,6 +12,7 @@ import com.example.skillshare.ui.screens.profiles.LearnerProfileScreen
 import com.example.skillshare.ui.screens.profiles.TrainerProfileScreen
 import com.example.skillshare.ui.screens.reviews.ReviewScreen
 import com.example.skillshare.ui.screens.trainer.SearchScreen
+import com.example.skillshare.ui.screens.messaging.ConversationsScreen
 import com.example.skillshare.ui.screens.auth.LoginScreen
 import com.example.skillshare.ui.screens.auth.SignupScreen
 import com.example.skillshare.ui.screens.trainer.TrainerDashboard
@@ -56,9 +57,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         //  Dashboards
         composable(Screen.TrainerDashboard.route) { 
             TrainerDashboard(
-                onViewSkills = { navController.navigate(Screen.TrainerSkills.route) },
-                onAddSkill = { navController.navigate(Screen.AddSkill.route) }
-            )
+                navController = navController)
          }
         composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
 
@@ -76,9 +75,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         //  Trainer Screens
         composable(Screen.TrainerSkills.route) { 
             TrainerSkillsScreen(
-                onSkillClick = { navController.navigate(Screen.Details.route) },
-                onBack = { navController.popBackStack() }
-            )
+                navController = navController)
         }
         composable(Screen.AddSkill.route) { AddSkillScreen(navController) }
 
