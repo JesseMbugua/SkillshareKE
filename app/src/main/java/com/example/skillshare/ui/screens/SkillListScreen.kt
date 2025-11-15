@@ -1,9 +1,17 @@
 package com.example.skillshare.ui.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,13 +20,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.skillshare.model.Skill
 import com.example.skillshare.network.RetrofitInstance
 import com.example.skillshare.viewmodel.SkillListViewModel
 
 // This composable connects to the ViewModel (Stateful)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillListScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     // The ViewModel is now created with a custom factory to inject the ApiService
     skillListViewModel: SkillListViewModel = viewModel(
@@ -34,14 +46,37 @@ fun SkillListScreen(
     )
 ) {
     val skills by skillListViewModel.skills.collectAsState()
-    // It calls the stateless composable with the current state
-    SkillList(skills = skills, modifier = modifier)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Trainer Skill Listings") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        },
+        modifier = modifier
+    ) { innerPadding ->
+        // It calls the stateless composable with the current state
+        SkillList(
+            skills = skills,
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        )
+    }
 }
 
 // This is your new stateless composable for the UI
 @Composable
 fun SkillList(skills: List<Skill>, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier.fillMaxSize()) {
+    LazyColumn(modifier = modifier) {
         items(skills) { skill ->
             // Consider creating a dedicated SkillItem composable for better structure
             Text(text = skill.title)
@@ -58,6 +93,7 @@ fun SkillListScreenPreview() {
         Skill("2", "Advanced Android", "Deep dive into Android development", 120, 75.0, "Online")
     )
 
-    // Now, you can directly preview the stateless SkillList composable
+    // You can't preview the whole screen easily because it needs a NavController.
+    // Instead, we preview the stateless SkillList composable.
     SkillList(skills = dummySkills)
 }

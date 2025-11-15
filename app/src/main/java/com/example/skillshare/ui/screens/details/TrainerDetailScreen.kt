@@ -13,9 +13,5 @@ fun TrainerDetailScreen(navController: NavController) {
     Column(Modifier.padding(16.dp)) {
         Text("Trainer: Jane Doe", style = MaterialTheme.typography.titleLarge)
         Text("Skill: Painting - KES 1500/hr")
-        Spacer(Modifier.height(12.dp))
-        Button(onClick = { navController.navigate(Screen.Booking.route) }) {
-            Text("Book Session")
-        }
     }
 }

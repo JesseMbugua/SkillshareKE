@@ -5,9 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.skillshare.ui.screens.booking.BookingScreen
 import com.example.skillshare.ui.screens.details.TrainerDetailScreen
-import com.example.skillshare.ui.screens.mybookings.MyBookingsScreen
 import com.example.skillshare.ui.screens.payment.PaymentScreen
 import com.example.skillshare.ui.screens.profiles.LearnerProfileScreen
 // Make sure this import exists and points to your actual TrainerProfileScreen file
@@ -22,7 +20,6 @@ import com.example.skillshare.ui.screens.user.UserDashboardScreen
 //import com.example.skillshare.ui.screens.profiles.ProfileScreen
 // Make sure these imports exist and point to their actual files
 import com.example.skillshare.ui.screens.trainer.TrainerSkillsScreen
-import com.example.skillshare.ui.screens.trainer.ManageBookingsScreen
 import com.example.skillshare.ui.screens.messaging.ChatScreen
 import com.example.skillshare.ui.screens.messaging.ConversationsScreen
 
@@ -34,18 +31,15 @@ sealed class Screen(
     object Login : Screen("login", "Login")
     object Signup : Screen("signup", "Signup")
     object Search : Screen("search", "Search")
-    object MyBookings : Screen("my_bookings", "Bookings")
     object Reviews : Screen("reviews", "Reviews")
     object LearnerProfile : Screen("learner_profile", "Profile")
     object Details : Screen("details", "Details")
-    object Booking : Screen("booking", "Booking")
     object TrainerProfile : Screen("trainer_profile", "Trainer")
     object Payment : Screen("payment", "Payment")
     object TrainerDashboard : Screen("trainer_dashboard", "Trainer Dashboard")
     object UserDashboard : Screen("user_dashboard", "User Dashboard")
     object Profile : Screen("profile", "Profile")
     object TrainerSkills : Screen("trainer_skills", "Trainer Skills")
-    object ManageBookings : Screen("manage_bookings", "Manage Bookings")
     object Chat : Screen("chat", "Chat")
     object Conversations : Screen("conversations", "Conversations")
     object AddSkill : Screen("add_skill", "Add Skill")
@@ -69,8 +63,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         //  Main App Pages
         composable(Screen.Search.route) { SearchScreen(navController) }
         composable(Screen.Details.route) { TrainerDetailScreen(navController) }
-        composable(Screen.Booking.route) { BookingScreen(navController) }
-        composable(Screen.MyBookings.route) { MyBookingsScreen(navController) }
         composable(Screen.Reviews.route) { ReviewScreen(navController) }
         composable(Screen.Payment.route) { PaymentScreen(navController) }
 
@@ -81,7 +73,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
 
         //  Trainer Screens
         composable(Screen.TrainerSkills.route) { TrainerSkillsScreen(navController) }
-        composable(Screen.ManageBookings.route) { ManageBookingsScreen(navController) }
 
         //  Messaging
         composable("chat/{conversationId}") { backStackEntry ->
@@ -101,9 +92,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
 
     @Composable
     fun TrainerSkillsScreen(navController: NavHostController) { ... }
-
-    @Composable
-    fun ManageBookingsScreen(navController: NavHostController) { ... }
 
     @Composable
     fun ChatScreen(conversationId: String, navController: NavHostController) { ... }

@@ -19,7 +19,7 @@ fun PaymentScreen(navController: NavController) {
         OutlinedTextField(value = method, onValueChange = { method = it }, label = { Text("Payment Method") })
         OutlinedTextField(value = amount, onValueChange = { amount = it }, label = { Text("Amount (KES)") })
         Spacer(Modifier.height(12.dp))
-        Button(onClick = { navController.navigate(Screen.MyBookings.route) }) {
+        Button(onClick = { /* No-op */ }) {
             Text("Confirm Payment")
         }
     }

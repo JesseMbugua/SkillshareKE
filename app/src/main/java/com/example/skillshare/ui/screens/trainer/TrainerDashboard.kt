@@ -31,7 +31,6 @@ fun TrainerDashboardScreen(navController: NavController) {
     var trainerCounty by remember { mutableStateOf("") }
 
     var skills by remember { mutableStateOf(listOf<Map<String, String>>()) }
-    var bookings by remember { mutableStateOf(listOf<Map<String, String>>()) }
 
     // Fetch trainer info and data
     LaunchedEffect(userId) {
@@ -48,13 +47,6 @@ fun TrainerDashboardScreen(navController: NavController) {
                 .get()
                 .addOnSuccessListener { result ->
                     skills = result.documents.map { it.data as Map<String, String> }
-                }
-
-            db.collection("bookings")
-                .whereEqualTo("trainerId", userId)
-                .get()
-                .addOnSuccessListener { result ->
-                    bookings = result.documents.map { it.data as Map<String, String> }
                 }
         }
     }
@@ -129,42 +121,6 @@ fun TrainerDashboardScreen(navController: NavController) {
             }
 
             Divider()
-
-            // Bookings section
-            Text(
-                text = "Incoming Bookings",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (bookings.isEmpty()) {
-                Text("No new bookings yet.")
-            } else {
-                LazyColumn {
-                    items(bookings) { booking ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = "Booked by: ${booking["learnerName"] ?: "Unknown"}",
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text("Skill: ${booking["skillName"] ?: "N/A"}")
-                                Text("Status: ${booking["status"] ?: "Pending"}")
-                                Spacer(Modifier.height(8.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Button(onClick = { /* TODO: Accept */ }) { Text("Accept") }
-                                    OutlinedButton(onClick = { /* TODO: Decline */ }) { Text("Decline") }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             Spacer(Modifier.height(20.dp))
             Button(
