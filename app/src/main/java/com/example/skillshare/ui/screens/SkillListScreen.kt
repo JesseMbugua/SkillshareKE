@@ -89,8 +89,8 @@ fun SkillList(skills: List<Skill>, modifier: Modifier = Modifier) {
 fun SkillListScreenPreview() {
     // Preview with dummy data
     val dummySkills = listOf(
-        Skill("1", "Kotlin for Beginners", "Learn the basics of Kotlin", 60, 25.0, "Online"),
-        Skill("2", "Advanced Android", "Deep dive into Android development", 120, 75.0, "Online")
+        Skill(id = "1", title = "Kotlin for Beginners", description = "Learn the basics of Kotlin", duration = 60, cost = 25.0, location = "Online"),
+        Skill(id = "2", title = "Advanced Android", description = "Deep dive into Android development", duration = 120, cost = 75.0, location = "Online")
     )
 
 
