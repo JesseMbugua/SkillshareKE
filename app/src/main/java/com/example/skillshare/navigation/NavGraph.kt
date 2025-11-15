@@ -2,9 +2,11 @@ package com.example.skillshare.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.skillshare.network.RetrofitInstance
 import com.example.skillshare.ui.screens.details.TrainerDetailScreen
 import com.example.skillshare.ui.screens.skills.AddSkillScreen
 import com.example.skillshare.ui.screens.payment.PaymentScreen
@@ -19,6 +21,8 @@ import com.example.skillshare.ui.screens.trainer.TrainerSkillsScreen
 import com.example.skillshare.ui.screens.user.UserDashboardScreen
 import com.example.skillshare.ui.screens.messaging.ChatScreen
 import com.example.skillshare.ui.screens.messaging.ConversationsScreen
+import com.example.skillshare.viewmodel.SkillListViewModel
+import com.example.skillshare.viewmodel.SkillListViewModelFactory
 
 // Sealed class for navigation routes
 sealed class Screen(
@@ -44,6 +48,11 @@ sealed class Screen(
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+    // Create a shared ViewModel scoped to this NavHost.
+    val skillListViewModel: SkillListViewModel = viewModel(
+        factory = SkillListViewModelFactory(RetrofitInstance.api)
+    )
+
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route,
@@ -54,7 +63,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.Signup.route) { SignupScreen(navController) }
 
         //  Dashboards
-        composable(Screen.TrainerDashboard.route) { 
+        composable(Screen.TrainerDashboard.route) {
             TrainerDashboard(
                 onViewSkills = { navController.navigate(Screen.TrainerSkills.route) },
                 onAddSkill = { navController.navigate(Screen.AddSkill.route) }
@@ -74,13 +83,19 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.LearnerProfile.route) { LearnerProfileScreen(navController) }
 
         //  Trainer Screens
-        composable(Screen.TrainerSkills.route) { 
+        composable(Screen.TrainerSkills.route) {
             TrainerSkillsScreen(
                 onSkillClick = { navController.navigate(Screen.Details.route) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                viewModel = skillListViewModel // Pass the shared ViewModel
             )
         }
-        composable(Screen.AddSkill.route) { AddSkillScreen(navController) }
+        composable(Screen.AddSkill.route) {
+            AddSkillScreen(
+                navController = navController,
+                viewModel = skillListViewModel // Pass the shared ViewModel
+            )
+        }
 
         //  Messaging
         composable("chat/{conversationId}") { backStackEntry ->
