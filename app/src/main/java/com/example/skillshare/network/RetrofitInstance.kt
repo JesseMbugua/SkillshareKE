@@ -5,8 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    // Replace with your actual base URL
-    private const val BASE_URL = "https://your.api.base.url/"
+    private const val BASE_URL = "https://skillshare-server.onrender.com/"
 
     val api: SkillApiService by lazy {
         Retrofit.Builder()
