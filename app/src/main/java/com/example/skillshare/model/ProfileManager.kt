@@ -53,4 +53,27 @@ class ProfileManager(
     // Returns live profile via session manager
     fun getCurrentProfileFlow() = ProfileSessionManager.currentProfile
 
+    fun isUser(): Boolean {
+        return ProfileSessionManager.currentProfile.value?.role == "user"
+    }
+
+    fun isTrainer(): Boolean {
+        return ProfileSessionManager.currentProfile.value?.role == "trainer"
+    }
+
+    fun isAdmin(): Boolean {
+        return ProfileSessionManager.currentProfile.value?.role == "admin"
+    }
+
+    suspend fun setUserRole(uid: String, newRole: String): ProfileResult {
+        return try {
+            repo.updateUserRole(uid, newRole)
+            ProfileResult.Success
+        } catch (e: Exception) {
+            ProfileResult.Error(e.message ?: "Failed to update role")
+        }
+    }
+
+
+
 }

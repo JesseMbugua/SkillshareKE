@@ -70,9 +70,10 @@ class ProfileRepository {
                 "displayName" to displayName,
                 "bio" to bio,
                 "photoUrl" to photoUrl,
+                "role" to (userDoc.getString("role") ?: "user"), // preserve role
                 "updatedAt" to Timestamp.now()
             )
-            
+
             transaction.set(userRef, data, SetOptions.merge())
         }.await()
     }
@@ -108,7 +109,10 @@ class ProfileRepository {
             // Ignore if file didn't exist, only delete if it does
         }
     }
-
-
-
+    suspend fun updateUserRole(uid: String, newRole: String) {
+        db.collection("users")
+            .document(uid)
+            .update("role", newRole)
+            .await()
+    }
 }

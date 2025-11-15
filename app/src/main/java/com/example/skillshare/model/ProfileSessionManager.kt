@@ -46,7 +46,8 @@ object ProfileSessionManager {
                         username = snapshot.getString("username"),
                         displayName = snapshot.getString("displayName") ?: "",
                         bio = snapshot.getString("bio"),
-                        photoUrl = snapshot.getString("photoUrl")
+                        photoUrl = snapshot.getString("photoUrl"),
+                        role = snapshot.getString("role") ?: "user"
                     )
                 }
             }
