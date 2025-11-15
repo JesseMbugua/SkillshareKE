@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Storefront
+
 import androidx.navigation.NavController
 import com.example.skillshare.navigation.Screen
 import com.example.skillshare.ui.theme.SkillshareTheme
@@ -52,7 +54,10 @@ val dummyTransactions = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainerDashboard(navController: NavController) {
+fun TrainerDashboard(onViewSkills: () -> Unit,
+                     onAddSkill: () -> Unit,
+
+                     navController: NavController) {
     var selectedBottomNavItem by remember { mutableStateOf("Dashboard") }
 
     Scaffold(

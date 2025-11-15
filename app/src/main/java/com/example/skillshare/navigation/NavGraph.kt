@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.skillshare.network.RetrofitInstance
 import com.example.skillshare.ui.screens.details.TrainerDetailScreen
 import com.example.skillshare.ui.screens.skills.AddSkillScreen
@@ -35,6 +37,9 @@ sealed class Screen(
     object Reviews : Screen("reviews", "Reviews")
     object LearnerProfile : Screen("learner_profile", "Profile")
     object Details : Screen("details", "Details")
+    {
+        fun createRoute(skillId: String) = "details/$skillId"
+    }
     object TrainerProfile : Screen("trainer_profile", "Trainer")
     object Payment : Screen("payment", "Payment")
     object TrainerDashboard : Screen("trainer_dashboard", "Trainer Dashboard")
@@ -65,6 +70,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         //  Dashboards
         composable(Screen.TrainerDashboard.route) {
             TrainerDashboard(
+                navController = navController,
                 onViewSkills = { navController.navigate(Screen.TrainerSkills.route) },
                 onAddSkill = { navController.navigate(Screen.AddSkill.route) }
             )
@@ -73,7 +79,18 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
 
         //  Main App Pages
         composable(Screen.Search.route) { SearchScreen(navController) }
-        composable(Screen.Details.route) { TrainerDetailScreen(navController) }
+        composable(
+            route = "details/{skillId}",
+            arguments = listOf(navArgument("skillId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val skillId = backStackEntry.arguments?.getString("skillId")
+            // Assuming TrainerDetailScreen takes skillId, if not, adjust accordingly.
+            // You may also need to pass the navController.
+            TrainerDetailScreen(
+                navController = navController,
+                skillId = skillId
+            )
+        }
         composable(Screen.Reviews.route) { ReviewScreen(navController) }
         composable(Screen.Payment.route) { PaymentScreen(navController) }
 
@@ -87,7 +104,9 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             TrainerSkillsScreen(
                 onSkillClick = { navController.navigate(Screen.Details.route) },
                 onBack = { navController.popBackStack() },
-                viewModel = skillListViewModel // Pass the shared ViewModel
+                viewModel = skillListViewModel,
+                navController = navController
+
             )
         }
         composable(Screen.AddSkill.route) {

@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.compose.ui:ui:1.7.4")
     implementation("androidx.compose.ui:ui-tooling-preview:1.7.4")
     implementation("androidx.compose.material3:material3:1.3.0")
+    implementation("androidx.compose.material:material-icons-extended-android:1.7.0-alpha01")
 
 
     // --- Navigation Compose --

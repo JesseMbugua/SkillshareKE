@@ -21,7 +21,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainerDetailScreen(navController: NavController) {
+fun TrainerDetailScreen(navController: NavController, skillId: String?) {
     Scaffold(
         topBar = {
             TopAppBar(

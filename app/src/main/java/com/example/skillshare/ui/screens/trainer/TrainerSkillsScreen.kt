@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.skillshare.viewmodel.SkillListViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -31,7 +32,11 @@ data class Skill(val id: String = "", val title: String = "", val description: S
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainerSkillsScreen(navController: NavController) {
+fun TrainerSkillsScreen(onSkillClick: (String) -> Unit,
+                        onBack: () -> Unit,
+                        viewModel: SkillListViewModel,
+                        modifier: Modifier = Modifier,
+                        navController: NavController) {
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid
