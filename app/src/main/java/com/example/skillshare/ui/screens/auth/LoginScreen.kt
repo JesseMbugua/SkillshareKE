@@ -9,7 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.skillshare.navigation.Screen // ✅ Import Screen
+import com.example.skillshare.navigation.Screen
+import at.favre.lib.crypto.bcrypt.BCrypt // (for future hashed passwords)
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -18,6 +19,7 @@ fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -30,39 +32,88 @@ fun LoginScreen(navController: NavController) {
             Text("Welcome Back 👋", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(32.dp))
 
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(24.dp))
 
             Button(
                 onClick = {
                     if (email.isEmpty() || password.isEmpty()) {
-                        status = "Please fill all fields"
-                    } else {
-                        db.collection("users")
-                            .whereEqualTo("email", email.lowercase())
-                            .whereEqualTo("password", password)
-                            .get()
-                            .addOnSuccessListener { documents ->
-                                if (!documents.isEmpty) {
-                                    status = "Login successful!"
-                                    navController.navigate(Screen.Search.route) {
-                                        popUpTo(Screen.Login.route) { inclusive = true }
+                        status = "❌ Please fill all fields"
+                        return@Button
+                    }
+
+                    isLoading = true
+
+                    // 🔹 Find user by email
+                    db.collection("users")
+                        .whereEqualTo("email", email.lowercase())
+                        .limit(1)
+                        .get()
+                        .addOnSuccessListener { documents ->
+                            isLoading = false
+                            if (documents.isEmpty) {
+                                status = "❌ No user found with that email"
+                            } else {
+                                val userDoc = documents.documents[0]
+                                val storedHash = userDoc.getString("passwordHash")
+                                val role = userDoc.getString("role") ?: "learner"
+
+                                if (storedHash != null) {
+                                    val result = BCrypt.verifyer()
+                                        .verify(password.toCharArray(), storedHash)
+
+                                    if (result.verified) {
+                                        status = "✅ Login successful!"
+
+                                        // Navigate based on role
+                                        if (role == "trainer") {
+                                            navController.navigate(Screen.TrainerDashboard.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate(Screen.UserDashboard.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
+                                        }
+                                    } else {
+                                        status = "❌ Incorrect password"
                                     }
                                 } else {
-                                    status = "Invalid credentials"
+                                    status = "❌ Invalid account data"
                                 }
                             }
-                            .addOnFailureListener { e ->
-                                status = "Error: ${e.message}"
-                            }
-                    }
+                        }
+                        .addOnFailureListener { e ->
+                            isLoading = false
+                            status = "❌ Error: ${e.message}"
+                        }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading
             ) {
-                Text("Login")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text("Login")
+                }
             }
 
             Spacer(Modifier.height(16.dp))

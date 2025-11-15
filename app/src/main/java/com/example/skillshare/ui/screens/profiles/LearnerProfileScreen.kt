@@ -6,6 +6,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import com.example.skillshare.navigation.Screen
+
 
 @Composable
 fun LearnerProfileScreen(navController: NavController) {
@@ -41,6 +44,23 @@ fun LearnerProfileScreen(navController: NavController) {
 
         Button(onClick = { isEditing = !isEditing }) {
             Text(if (isEditing) "Save Changes" else "Edit Profile")
+        }
+        Button(
+            onClick = {
+                FirebaseAuth.getInstance().signOut()
+                navController.navigate(Screen.Login.route) {
+
+                    popUpTo(0) { inclusive = true }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            // Change the color to match the theme's primary color
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Text("Log Out")
         }
     }
 }

@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
     id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
 }
 
 android {
@@ -33,7 +34,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = "2.0.21"
     }
 
     compileOptions {
@@ -51,13 +52,16 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
 
-    // --- Firebase BoM (manages all Firebase versions automatically) ---
-    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    // bcrypt dependency for password hashing.
+    implementation("at.favre.lib:bcrypt:0.9.0")
 
-    // --- Firebase Libraries (no versions needed) ---
+    // Firebase stuff
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
 
     // --- Jetpack Compose ---
     implementation("androidx.activity:activity-compose:1.9.2")
@@ -85,4 +89,19 @@ dependencies {
 
     // --- Colors & System UI ---
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.33.2-alpha")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+
+    // --- Firebase Libraries (no versions needed) ---
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+
+    // --- Kotlinx Serialization ---
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1") // <-- Add this line
+
+    // --- Jetpack Compose ---
+    implementation("androidx.activity:activity-compose:1.9.2")
+
+
 }

@@ -11,15 +11,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillshare.model.Skill
-import com.example.skillshare.network.RetrofitInstance
 import com.example.skillshare.viewmodel.SkillListViewModel
 
-@Composable
-fun SkillListScreen(modifier: Modifier = Modifier, skillListViewModel: SkillListViewModel = viewModel()) {
-    val skills by skillListViewModel.skills.collectAsState()
 
+// import com.example.skillshare.network.RetrofitInstance
+// import com.example.skillshare.viewmodel.SkillListViewModel
+
+// This composable connects to the ViewModel (Stateful)
+@Composable
+fun SkillListScreen(
+    modifier: Modifier = Modifier,
+    skillListViewModel: SkillListViewModel = viewModel()
+) {
+    val skills by skillListViewModel.skills.collectAsState()
+    // It calls the stateless composable with the current state
+    SkillList(skills = skills, modifier = modifier)
+}
+
+// This is your new stateless composable for the UI
+@Composable
+fun SkillList(skills: List<Skill>, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier.fillMaxSize()) {
         items(skills) { skill ->
+            // Consider creating a dedicated SkillItem composable for better structure
             Text(text = skill.title)
         }
     }
@@ -33,8 +47,7 @@ fun SkillListScreenPreview() {
         Skill("1", "Kotlin for Beginners", "Learn the basics of Kotlin", 60, 25.0, "Online"),
         Skill("2", "Advanced Android", "Deep dive into Android development", 120, 75.0, "Online")
     )
-    val viewModel = SkillListViewModel(RetrofitInstance.api)
-    viewModel.skills.value = dummySkills
 
-    SkillListScreen(skillListViewModel = viewModel)
+    // Now, you can directly preview the stateless SkillList composable
+    SkillList(skills = dummySkills)
 }
