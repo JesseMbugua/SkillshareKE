@@ -3,6 +3,8 @@ package com.example.skillshare.ui.screens.trainer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -39,32 +41,49 @@ fun TrainerSkillsScreen(navController: NavController) {
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("My Skills", style = MaterialTheme.typography.headlineSmall)
-                Button(onClick = { showAddDialog = true }) { Text("Add") }
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("My Skills") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Surface(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("My Skills", style = MaterialTheme.typography.headlineSmall)
+                    Button(onClick = { showAddDialog = true }) { Text("Add") }
+                }
 
-            Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(12.dp))
 
-            if (loading) Text("Loading...")
-            else if (skills.isEmpty()) Text("No skills yet")
-            else {
-                LazyColumn {
-                    itemsIndexed(skills) { index, skill ->
-                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(skill.title, style = MaterialTheme.typography.titleMedium)
-                                Text(skill.description)
-                                Spacer(Modifier.height(8.dp))
-                                Row {
-                                    Button(onClick = { editingSkill = skill; showAddDialog = true }) { Text("Edit") }
-                                    Spacer(Modifier.width(8.dp))
-                                    OutlinedButton(onClick = {
-                                        // delete
-                                        db.collection("skills").document(skill.id).delete()
-                                    }) { Text("Delete") }
+                if (loading) Text("Loading...")
+                else if (skills.isEmpty()) Text("No skills yet")
+                else {
+                    LazyColumn {
+                        itemsIndexed(skills) { index, skill ->
+                            Card(modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(skill.title, style = MaterialTheme.typography.titleMedium)
+                                    Text(skill.description)
+                                    Spacer(Modifier.height(8.dp))
+                                    Row {
+                                        Button(onClick = { editingSkill = skill; showAddDialog = true }) { Text("Edit") }
+                                        Spacer(Modifier.width(8.dp))
+                                        OutlinedButton(onClick = {
+                                            // delete
+                                            db.collection("skills").document(skill.id).delete()
+                                        }) { Text("Delete") }
+                                    }
                                 }
                             }
                         }
@@ -73,6 +92,7 @@ fun TrainerSkillsScreen(navController: NavController) {
             }
         }
     }
+
 
     if (showAddDialog) {
         AddEditSkillDialog(

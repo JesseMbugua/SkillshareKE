@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.skillshare.ui.screens.details.TrainerDetailScreen
-import com.example.skillshare.ui.screens.skills.SkillListScreen
+import com.example.skillshare.ui.screens.skills.AddSkillScreen
 import com.example.skillshare.ui.screens.payment.PaymentScreen
 import com.example.skillshare.ui.screens.profiles.LearnerProfileScreen
 import com.example.skillshare.ui.screens.profiles.TrainerProfileScreen
@@ -15,6 +15,7 @@ import com.example.skillshare.ui.screens.trainer.SearchScreen
 import com.example.skillshare.ui.screens.auth.LoginScreen
 import com.example.skillshare.ui.screens.auth.SignupScreen
 import com.example.skillshare.ui.screens.trainer.TrainerDashboard
+import com.example.skillshare.ui.screens.trainer.TrainerSkillsScreen
 import com.example.skillshare.ui.screens.user.UserDashboardScreen
 import com.example.skillshare.ui.screens.messaging.ChatScreen
 import com.example.skillshare.ui.screens.messaging.ConversationsScreen
@@ -53,7 +54,12 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.Signup.route) { SignupScreen(navController) }
 
         //  Dashboards
-        composable(Screen.TrainerDashboard.route) { TrainerDashboard(onAddSkill = { navController.navigate(Screen.AddSkill.route) }, onSkillClick = { navController.navigate(Screen.Details.route) }) }
+        composable(Screen.TrainerDashboard.route) { 
+            TrainerDashboard(
+                onViewSkills = { navController.navigate(Screen.TrainerSkills.route) },
+                onAddSkill = { navController.navigate(Screen.AddSkill.route) }
+            )
+         }
         composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
 
         //  Main App Pages
@@ -68,7 +74,13 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.LearnerProfile.route) { LearnerProfileScreen(navController) }
 
         //  Trainer Screens
-        composable(Screen.TrainerSkills.route) { SkillListScreen(navController) }
+        composable(Screen.TrainerSkills.route) { 
+            TrainerSkillsScreen(
+                onSkillClick = { navController.navigate(Screen.Details.route) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.AddSkill.route) { AddSkillScreen(navController) }
 
         //  Messaging
         composable("chat/{conversationId}") { backStackEntry ->
