@@ -47,7 +47,7 @@ fun SearchScreen(navController: NavController) {
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            label = { Text("Search by skill, trainer, or location") },
+            label = { Text("Search by skill or trainer") },
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp)),

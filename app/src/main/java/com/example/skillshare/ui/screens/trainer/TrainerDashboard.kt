@@ -50,12 +50,6 @@ fun TrainerDashboardScreen(navController: NavController) {
                     skills = result.documents.map { it.data as Map<String, String> }
                 }
 
-            db.collection("bookings")
-                .whereEqualTo("trainerId", userId)
-                .get()
-                .addOnSuccessListener { result ->
-                    bookings = result.documents.map { it.data as Map<String, String> }
-                }
         }
     }
 

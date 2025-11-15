@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity() {
                     bottomBar = {
                         if (currentRoute in listOf(
                                 "search",
-                                "my_bookings",
                                 "reviews",
                                 "learner_profile"
                             )

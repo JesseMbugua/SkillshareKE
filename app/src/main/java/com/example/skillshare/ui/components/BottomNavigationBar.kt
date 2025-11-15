@@ -8,7 +8,6 @@ import com.example.skillshare.navigation.Screen
 fun BottomNavigationBar(currentRoute: String, onNavigate: (String) -> Unit) {
     val items = listOf(
         Screen.Search,
-        Screen.MyBookings,
         Screen.Reviews,
         Screen.LearnerProfile
     )
