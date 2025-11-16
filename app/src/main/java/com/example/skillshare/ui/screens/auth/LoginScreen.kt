@@ -76,17 +76,42 @@ fun LoginScreen(navController: NavController) {
 
                                     val role = doc.getString("role") ?: "user"
 
+// Check banned status
+                                    val banned = when (val b = doc.get("banned")) {
+                                        is Boolean -> b
+                                        is String -> b.equals("true", ignoreCase = true)
+                                        is Number -> b.toInt() == 1
+                                        else -> false
+                                    }
+                                    if (banned) {
+                                        status = "❌ This account has been banned"
+                                        return@addOnSuccessListener
+                                    }
+
+
+// Redirect based on role
                                     status = "✅ Login successful!"
 
-                                    if (role == "trainer") {
-                                        navController.navigate(Screen.TrainerDashboard.createRoute(uid)) {
-                                            popUpTo(Screen.Login.route) { inclusive = true }
+                                    when (role.lowercase()) {
+                                        "admin" -> {
+                                            navController.navigate(Screen.AdminDashboard.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
                                         }
-                                    } else {
-                                        navController.navigate(Screen.UserDashboard.route) {
-                                            popUpTo(Screen.Login.route) { inclusive = true }
+
+                                        "trainer" -> {
+                                            navController.navigate(Screen.TrainerDashboard.createRoute(uid)) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
+                                        }
+
+                                        else -> { // normal user
+                                            navController.navigate(Screen.UserDashboard.route) {
+                                                popUpTo(Screen.Login.route) { inclusive = true }
+                                            }
                                         }
                                     }
+
                                 }
                                 .addOnFailureListener { e ->
                                     isLoading = false

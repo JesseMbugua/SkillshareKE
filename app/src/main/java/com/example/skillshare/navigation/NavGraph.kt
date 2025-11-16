@@ -1,4 +1,5 @@
 package com.example.skillshare.navigation
+// package com.example.skillshare.ui.screens.admin
 
 import android.app.Application
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import com.example.skillshare.ui.screens.trainer.TrainerSkillsScreen
 import com.example.skillshare.ui.screens.user.UserDashboardScreen
 import com.example.skillshare.ui.screens.messaging.ChatScreen
 import com.example.skillshare.ui.screens.messaging.ConversationsScreen
+import com.example.skillshare.ui.screens.admin.AdminDashboardScreen
 import com.example.skillshare.viewmodel.SkillListViewModel
 import com.example.skillshare.viewmodel.SkillListViewModelFactory
 
@@ -55,6 +57,8 @@ sealed class Screen(
     object AddSkill : Screen("add_skill_screen/{trainerId}", "Add Skill") {
         fun createRoute(trainerId: String) = "add_skill_screen/$trainerId"
     }
+    object AdminDashboard : Screen("admin_dashboard", "Admin Dashboard")
+
 }
 
 @Composable
@@ -87,6 +91,10 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
         composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
+        composable(Screen.AdminDashboard.route) {
+            AdminDashboardScreen(navController)
+        }
+
 
         //  Main App Pages
         composable(Screen.Search.route) { SearchScreen(navController) }
