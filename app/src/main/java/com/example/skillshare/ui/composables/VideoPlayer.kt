@@ -9,47 +9,52 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
 @Composable
-fun VideoPlayer(modifier: Modifier = Modifier, videoUrl: String) {
+fun VideoPlayer(
+    modifier: Modifier = Modifier,
+    videoUrl: String
+) {
     val context = LocalContext.current
 
-    // Create and remember an ExoPlayer instance, keyed on the videoUrl.
-    // This will create a new player whenever the URL changes.
+    // Create ExoPlayer instance
     val exoPlayer = remember(videoUrl) {
         ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
-            // Add a listener to log errors
+
+            // Load video
+            val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
+            setMediaItem(mediaItem)
+
+            // Error logs
             addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
-                    super.onPlayerError(error)
-                    Log.e("VideoPlayer", "ExoPlayer Error: ", error)
+                    Log.e("VideoPlayer", "Error playing video: ${error.message}")
                 }
             })
+
             prepare()
-            playWhenReady = true // Start playing automatically
+            playWhenReady = true
         }
     }
 
-    // Dispose of the player when the composable is removed from the screen
-    // or when the exoPlayer instance changes.
-    DisposableEffect(exoPlayer) {
+    // Cleanup when composable leaves screen
+    DisposableEffect(Unit) {
         onDispose {
             exoPlayer.release()
         }
     }
 
-    // Use AndroidView to embed the ExoPlayer's PlayerView.
-    // The update block will be called when the view is first created and
-    // anytime the exoPlayer instance changes.
+    // Render Android PlayerView inside Compose
     AndroidView(
         modifier = modifier,
-        factory = {
-            PlayerView(it)
+        factory = { context ->
+            PlayerView(context).apply {
+                this.player = exoPlayer
+            }
         },
         update = { playerView ->
             playerView.player = exoPlayer
