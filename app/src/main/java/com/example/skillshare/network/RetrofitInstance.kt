@@ -9,7 +9,7 @@ import retrofit2.Retrofit
 
 object RetrofitInstance {
 
-    private const val BASE_URL = "https://skillshare-server.onrender.com/"
+    private const val BASE_URL = "http://10.0.2.2:8080/"
 
     // Configure a Json instance to be lenient about unknown keys
     private val json = Json { ignoreUnknownKeys = true }

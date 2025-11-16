@@ -1,6 +1,7 @@
 package com.example.skillshare.network
 
-import com.example.skillshare.model.Skill
+import com.example.skillshare.data.CreateSkillRequest
+import com.example.skillshare.data.Skill
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -11,7 +12,7 @@ import retrofit2.http.Path
 interface SkillApiService {
 
     @POST("skills")
-    suspend fun createSkill(@Body skill: Skill): Skill
+    suspend fun createSkill(@Body request: CreateSkillRequest): Skill
 
     @GET("skills")
     suspend fun getSkills(): List<Skill>
@@ -20,7 +21,7 @@ interface SkillApiService {
     suspend fun getSkill(@Path("id") id: String): Skill
 
     @PUT("skills/{id}")
-    suspend fun updateSkill(@Path("id") id: String, @Body skill: Skill): Skill
+    suspend fun updateSkill(@Path("id") id: String, @Body request: CreateSkillRequest): Skill
 
     @DELETE("skills/{id}")
     suspend fun deleteSkill(@Path("id") id: String)

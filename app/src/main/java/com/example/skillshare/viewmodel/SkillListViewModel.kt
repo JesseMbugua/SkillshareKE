@@ -3,19 +3,29 @@ package com.example.skillshare.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skillshare.model.Skill
-import com.example.skillshare.network.SkillApiService
+import com.example.skillshare.data.CreateSkillRequest
+import com.example.skillshare.data.Skill
+import com.example.skillshare.network.RetrofitInstance
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
-class SkillListViewModel(private val skillApiService: SkillApiService) : ViewModel() {
+class SkillListViewModel : ViewModel() {
+
+    private val skillApiService = RetrofitInstance.api
 
     private val _skills = MutableStateFlow<List<Skill>>(emptyList())
-    val skills: StateFlow<List<Skill>> = _skills
+    val skills = _skills.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _addSkillResult = MutableSharedFlow<Result<Unit>>()
+    val addSkillResult = _addSkillResult.asSharedFlow()
 
     init {
         fetchSkills()
@@ -28,16 +38,31 @@ class SkillListViewModel(private val skillApiService: SkillApiService) : ViewMod
                 _skills.value = skillApiService.getSkills()
             } catch (e: Exception) {
                 Log.e("SkillListViewModel", "Failed to fetch skills", e)
-                _skills.value = emptyList() // Clear skills on error
+                _skills.value = emptyList()
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    suspend fun addSkill(skill: Skill) {
-        // This will call your API and will throw an exception on failure,
-        // which will be caught in the AddSkillScreen
-        skillApiService.createSkill(skill)
+    fun addSkill(title: String, description: String, duration: Int, cost: Double, location: String) {
+        viewModelScope.launch {
+            try {
+                val request = CreateSkillRequest(title, description, duration, cost, location)
+                skillApiService.createSkill(request)
+                _addSkillResult.emit(Result.success(Unit))
+                fetchSkills() // Refresh the list after adding
+            } catch (e: HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("SkillListViewModel", "HttpException: ${errorBody ?: "Unknown error"}", e)
+                _addSkillResult.emit(Result.failure(Exception("Server Error: ${errorBody ?: "Please try again"}")))
+            } catch (e: IOException) {
+                Log.e("SkillListViewModel", "IOException: Network error", e)
+                _addSkillResult.emit(Result.failure(Exception("Network Error: Please check your connection.")))
+            } catch (e: Exception) {
+                Log.e("SkillListViewModel", "Failed to add skill", e)
+                _addSkillResult.emit(Result.failure(e))
+            }
+        }
     }
 }

@@ -54,10 +54,7 @@ val dummyTransactions = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainerDashboard(onViewSkills: () -> Unit,
-                     onAddSkill: () -> Unit,
-
-                     navController: NavController) {
+fun TrainerDashboard(navController: NavController) {
     var selectedBottomNavItem by remember { mutableStateOf("Dashboard") }
 
     Scaffold(
@@ -96,7 +93,7 @@ fun TrainerDashboard(onViewSkills: () -> Unit,
             item {
 
                 ActionButtons(
-                    onAddSkill = { navController.navigate(Screen.TrainerSkills.route) },
+                    onAddSkill = { navController.navigate(Screen.AddSkill.route) },
                     onViewSkills = { navController.navigate(Screen.TrainerSkills.route) }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
