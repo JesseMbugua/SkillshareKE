@@ -78,11 +78,11 @@ fun LoginScreen(navController: NavController) {
 
                                     if (result.verified) {
                                         status = "✅ Login successful!"
-                                        val userId = userDoc.id
 
                                         // Navigate based on role
                                         if (role == "trainer") {
-                                            navController.navigate(Screen.TrainerDashboard.createRoute(userId)) {
+                                            // Use the trainer's email as the ID
+                                            navController.navigate(Screen.TrainerDashboard.createRoute(email.lowercase())) {
                                                 popUpTo(Screen.Login.route) { inclusive = true }
                                             }
                                         } else {

@@ -1,7 +1,9 @@
 package com.example.skillshare.navigation
 
+import android.app.Application
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,6 +25,7 @@ import com.example.skillshare.ui.screens.user.UserDashboardScreen
 import com.example.skillshare.ui.screens.messaging.ChatScreen
 import com.example.skillshare.ui.screens.messaging.ConversationsScreen
 import com.example.skillshare.viewmodel.SkillListViewModel
+import com.example.skillshare.viewmodel.SkillListViewModelFactory
 
 // Sealed class for navigation routes
 sealed class Screen(
@@ -56,8 +59,12 @@ sealed class Screen(
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
-    // Create a shared ViewModel scoped to this NavHost.
-    val skillListViewModel: SkillListViewModel = viewModel()
+    // Get the application context to create the ViewModel Factory
+    val application = LocalContext.current.applicationContext as Application
+    val skillListViewModelFactory = SkillListViewModelFactory(application)
+
+    // Create a shared ViewModel scoped to this NavHost using the factory.
+    val skillListViewModel: SkillListViewModel = viewModel(factory = skillListViewModelFactory)
 
     NavHost(
         navController = navController,
