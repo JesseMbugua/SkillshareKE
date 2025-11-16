@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.skillshare.navigation.Screen
 import at.favre.lib.crypto.bcrypt.BCrypt
@@ -15,7 +16,9 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavController) {
+
     val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -29,7 +32,8 @@ fun SignupScreen(navController: NavController) {
 
     var status by remember { mutableStateOf("") }
 
-    val counties = listOf<String>("Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu",
+    val counties = listOf(
+        "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu",
         "Garissa", "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho",
         "Kiambu", "Kilifi", "Kirinyaga", "Kisii", "Kisumu", "Kitui", "Kwale",
         "Laikipia", "Lamu", "Machakos", "Makueni", "Mandera", "Marsabit",
@@ -49,16 +53,32 @@ fun SignupScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+
             Text("Create Account", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(24.dp))
 
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Full Name") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone (+254...)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Phone (+254...)") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
@@ -70,17 +90,25 @@ fun SignupScreen(navController: NavController) {
             )
             Spacer(Modifier.height(12.dp))
 
-            // Role dropdown
-            ExposedDropdownMenuBox(expanded = expandedRole, onExpandedChange = { expandedRole = !expandedRole }) {
+            // ROLE DROPDOWN
+            ExposedDropdownMenuBox(
+                expanded = expandedRole,
+                onExpandedChange = { expandedRole = !expandedRole }
+            ) {
                 OutlinedTextField(
                     value = selectedRole,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Select Role") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRole) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
                 )
-                ExposedDropdownMenu(expanded = expandedRole, onDismissRequest = { expandedRole = false }) {
+                ExposedDropdownMenu(
+                    expanded = expandedRole,
+                    onDismissRequest = { expandedRole = false }
+                ) {
                     roles.forEach { role ->
                         DropdownMenuItem(
                             text = { Text(role) },
@@ -95,17 +123,24 @@ fun SignupScreen(navController: NavController) {
 
             Spacer(Modifier.height(12.dp))
 
-            // County dropdown
-            ExposedDropdownMenuBox(expanded = expandedCounty, onExpandedChange = { expandedCounty = !expandedCounty }) {
+            ExposedDropdownMenuBox(
+                expanded = expandedCounty,
+                onExpandedChange = { expandedCounty = !expandedCounty }
+            ) {
                 OutlinedTextField(
                     value = selectedCounty,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Select County") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCounty) },
-                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
                 )
-                ExposedDropdownMenu(expanded = expandedCounty, onDismissRequest = { expandedCounty = false }) {
+                ExposedDropdownMenu(
+                    expanded = expandedCounty,
+                    onDismissRequest = { expandedCounty = false }
+                ) {
                     counties.forEach { county ->
                         DropdownMenuItem(
                             text = { Text(county) },
@@ -122,34 +157,45 @@ fun SignupScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty() || selectedCounty.isEmpty()) {
+                    if (name.isEmpty() || email.isEmpty() ||
+                        phone.isEmpty() || password.isEmpty() || selectedCounty.isEmpty()
+                    ) {
                         status = "Please fill all fields"
                         return@Button
                     }
 
-                    // *** HASH PASSWORD HERE ***
-                    val hashed = BCrypt.withDefaults().hashToString(12, password.toCharArray())
+                    auth.createUserWithEmailAndPassword(email.trim(), password)
+                        .addOnSuccessListener { result ->
+                            val uid = result.user!!.uid
 
-                    val user = hashMapOf(
-                        "name" to name,
-                        "email" to email.lowercase(),
-                        "phone" to phone,
-                        "passwordHash" to hashed,   // <<-- use hashed
-                        "county" to selectedCounty,
-                        "role" to selectedRole.lowercase(),
-                        "createdAt" to System.currentTimeMillis()
-                    )
+                            val hashed = BCrypt.withDefaults()
+                                .hashToString(12, password.toCharArray())
 
-                    db.collection("users")
-                        .add(user)
-                        .addOnSuccessListener {
-                            status = "Account created!"
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(Screen.Signup.route) { inclusive = true }
-                            }
+                            val user = hashMapOf(
+                                "displayName" to name,
+                                "email" to email.lowercase(),
+                                "phone" to phone,
+                                "county" to selectedCounty,
+                                "role" to selectedRole.lowercase(),
+                                "passwordHash" to hashed,
+                                "createdAt" to System.currentTimeMillis()
+                            )
+
+                            db.collection("users")
+                                .document(uid)
+                                .set(user)
+                                .addOnSuccessListener {
+                                    status = "Account created!"
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(Screen.Signup.route) { inclusive = true }
+                                    }
+                                }
+                                .addOnFailureListener { e ->
+                                    status = "Error saving profile: ${e.message}"
+                                }
                         }
                         .addOnFailureListener { e ->
-                            status = "Error: ${e.message}"
+                            status = "Signup failed: ${e.message}"
                         }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -159,7 +205,9 @@ fun SignupScreen(navController: NavController) {
 
             Spacer(Modifier.height(16.dp))
 
-            TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
+            TextButton(onClick = {
+                navController.navigate(Screen.Login.route)
+            }) {
                 Text("Already have an account? Log in")
             }
 

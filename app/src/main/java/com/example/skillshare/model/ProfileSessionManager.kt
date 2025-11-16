@@ -44,7 +44,9 @@ object ProfileSessionManager {
                 if (snapshot != null && snapshot.exists()) {
                     _currentProfile.value = UserProfile(
                         username = snapshot.getString("username"),
-                        displayName = snapshot.getString("displayName") ?: "",
+                        displayName = snapshot.getString("displayName")
+                            ?: snapshot.getString("name")     // fallback for old accounts
+                            ?: "",
                         bio = snapshot.getString("bio"),
                         photoUrl = snapshot.getString("photoUrl"),
                         role = snapshot.getString("role") ?: "user"

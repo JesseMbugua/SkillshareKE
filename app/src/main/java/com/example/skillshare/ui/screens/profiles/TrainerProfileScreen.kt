@@ -1,170 +1,218 @@
 package com.example.skillshare.ui.screens.profiles
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.skillshare.R
+import com.example.skillshare.model.ProfileRepository
+import com.example.skillshare.model.ProfileSessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.navigation.NavController
 import com.example.skillshare.navigation.Screen
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainerProfileScreen(navController: NavController) {
-    val auth = FirebaseAuth.getInstance()
-    val uid = auth.currentUser?.uid ?: ""
-    val db = FirebaseFirestore.getInstance()
-    val storage = FirebaseStorage.getInstance().reference
 
-    val context = LocalContext.current
-    var name by remember { mutableStateOf("") }
+    val repo = remember { ProfileRepository() }
+    val profile by ProfileSessionManager.currentProfile.collectAsState()
+
+    // Editable fields
+    var username by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf(auth.currentUser?.email ?: "") }
-    var photoUrl by remember { mutableStateOf<String?>(null) }
-    var status by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
 
-    // Image picker launcher
+    // Image
     var pickedUri by remember { mutableStateOf<Uri?>(null) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        pickedUri = uri
+    var isEditing by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf("") }
+
+    // Image launcher
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        pickedUri = it
     }
 
-
-    LaunchedEffect(uid) {
-        if (uid.isNotBlank()) {
-            db.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    name = doc.getString("username") ?: ""
-                    bio = doc.getString("bio") ?: ""
-                    photoUrl = doc.getString("photoUrl")
-                }
-        }
+    // Load profile data from Firestore
+    LaunchedEffect(profile) {
+        username = profile?.username ?: ""
+        fullName = profile?.displayName ?: ""
+        bio = profile?.bio ?: ""
     }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("My Profile", style = MaterialTheme.typography.headlineMedium)
+    Column(
+        modifier = Modifier
+            .padding(20.dp)
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-            Spacer(Modifier.height(16.dp))
+        // Title
+        Text("My Profile", style = MaterialTheme.typography.headlineMedium)
+        Spacer(Modifier.height(20.dp))
 
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(120.dp)
-            ) {
-                val painter = rememberAsyncImagePainter(model = pickedUri ?: photoUrl)
-                if (photoUrl != null) {
-                    Image(
-                        painter = painter,
-                        contentDescription = "Profile photo",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
+        // Profile photo + edit/delete buttons
+        Row(verticalAlignment = Alignment.CenterVertically) {
 
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(name.takeIf { it.isNotBlank() }?.firstOrNull()?.toString() ?: "U")
-                    }
+            // Profile image with fallback
+            val imagePainter = rememberAsyncImagePainter(
+                model = pickedUri ?: profile?.photoUrl,
+                placeholder = painterResource(R.drawable.default_pfp),
+                error = painterResource(R.drawable.default_pfp)
+            )
+
+            Image(
+                painter = imagePainter,
+                contentDescription = "Profile",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+            )
+
+            Spacer(Modifier.width(16.dp))
+
+            Column {
+
+                // Pencil icon (edit photo)
+                IconButton(onClick = { launcher.launch("image/*") }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit photo")
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
+                // Delete photo icon
+                if (profile?.photoUrl != null || pickedUri != null) {
+                    IconButton(
+                        onClick = {
+                            pickedUri = null
+                            CoroutineScope(Dispatchers.IO).launch {
+                                repo.deleteOldProfilePicture()
 
-            Button(onClick = { launcher.launch("image/*") }) {
-                Text("Upload Photo")
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(value = bio, onValueChange = { bio = it }, label = { Text("Bio") }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(16.dp))
-
-            Button(onClick = {
-                // Save profile (and optionally upload image first)
-                loading = true
-                status = "Saving..."
-                val onSaveComplete: (String) -> Unit = { msg ->
-                    loading = false
-                    status = msg
-                    // Navigate back to the dashboard on success
-                    if (msg.contains("successfully")) {
-                        navController.navigate(Screen.TrainerDashboard.route) {
-                            popUpTo(Screen.TrainerDashboard.route) { inclusive = true }
-                        }
-                    }
-                }
-                if (pickedUri != null) {
-                    val uri = pickedUri!!
-                    val ref = storage.child("profile_photos/$uid.jpg")
-                    ref.putFile(uri)
-                        .addOnSuccessListener {
-                            ref.downloadUrl.addOnSuccessListener { downloadUrl ->
-                                saveProfile(db, uid, name, bio, downloadUrl.toString()) {
-                                    loading = false
-                                    status = it
-                                }
+                                repo.saveProfile(
+                                    username = username,
+                                    displayName = fullName,
+                                    bio = bio,
+                                    photoUrl = null
+                                )
                             }
                         }
-                        .addOnFailureListener { e ->
-                            loading = false
-                            status = "Upload failed: ${e.message}"
-                        }
-                } else {
-                    saveProfile(db, uid, name, bio, photoUrl) { msg ->
-                        loading = false
-                        status = msg
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete photo")
                     }
                 }
-            }, enabled = !loading, modifier = Modifier.fillMaxWidth()) {
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Edit toggle
+        Button(
+            onClick = { isEditing = !isEditing },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(if (isEditing) "Cancel Editing" else "Edit Profile")
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Username
+        OutlinedTextField(
+            value = username,
+            onValueChange = { if (isEditing) username = it },
+            label = { Text("Username") },
+            enabled = isEditing,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Your unique username") }
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // Full name
+        OutlinedTextField(
+            value = fullName,
+            onValueChange = { if (isEditing) fullName = it },
+            label = { Text("Full Name") },
+            enabled = isEditing,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Optional full name") }
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        // Bio
+        OutlinedTextField(
+            value = bio,
+            onValueChange = { if (isEditing) bio = it },
+            label = { Text("Bio") },
+            enabled = isEditing,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Tell people about yourself") }
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        // Save button only in editing mode
+        if (isEditing) {
+            Button(
+                onClick = {
+                    isSaving = true
+                    status = "Saving..."
+
+                    CoroutineScope(Dispatchers.IO).launch {
+
+                        try {
+                            var newPhotoUrl = profile?.photoUrl
+
+                            // Upload new image if picked
+                            if (pickedUri != null) {
+                                newPhotoUrl = repo.uploadProfileImage(pickedUri!!)
+                            }
+
+                            // Save fields (safe fallback)
+                            repo.saveProfile(
+                                username = username.ifEmpty { profile?.username ?: "" },
+                                displayName = fullName,
+                                bio = bio,
+                                photoUrl = newPhotoUrl
+                            )
+
+                            withContext(Dispatchers.Main) {
+                                isSaving = false
+                                status = "Saved"
+                                isEditing = false
+                            }
+
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                isSaving = false
+                                status = "Error: ${e.message}"
+                            }
+                        }
+                    }
+                },
+                enabled = !isSaving,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Save Changes")
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(status)
         }
-    }
-}
 
-private fun saveProfile(db: FirebaseFirestore, uid: String, name: String, bio: String, photoUrl: String?, onDone: (String) -> Unit) {
-    val data = hashMapOf<String, Any>(
-        "name" to name,
-        "bio" to bio
-    )
-    photoUrl?.let { data["photoUrl"] = it }
-    db.collection("users").document(uid)
-        .set(data, com.google.firebase.firestore.SetOptions.merge())
-        .addOnSuccessListener { onDone("Profile saved") }
-        .addOnFailureListener { e -> onDone("Error: ${e.message}") }
+        Spacer(Modifier.height(12.dp))
+        Text(status)
+    }
 }
