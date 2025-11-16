@@ -13,6 +13,7 @@ import com.example.skillshare.data.Skill
 import com.example.skillshare.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -21,13 +22,16 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import java.io.IOException
 
-// The ViewModel now takes Application in its constructor to get access to the ContentResolver
 class SkillListViewModel(private val application: Application) : ViewModel() {
 
     private val skillApiService = RetrofitInstance.api
 
     private val _skills = MutableStateFlow<List<Skill>>(emptyList())
-    val skills = _skills.asStateFlow()
+    val skills: StateFlow<List<Skill>> = _skills.asStateFlow()
+
+    // This holds the currently viewed skill
+    private val _selectedSkill = MutableStateFlow<Skill?>(null)
+    val selectedSkill: StateFlow<Skill?> = _selectedSkill.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -36,24 +40,49 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
     val addSkillResult = _addSkillResult.asSharedFlow()
 
     init {
-        fetchSkills()
+        loadSkills() // Load all skills initially
     }
 
-    fun fetchSkills() {
+    fun loadSkills(trainerId: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _skills.value = skillApiService.getSkills()
+                _skills.value = skillApiService.getSkills(trainerId)
             } catch (e: Exception) {
                 Log.e("SkillListViewModel", "Failed to fetch skills", e)
-                _skills.value = emptyList()
+                _skills.value = emptyList() // Reset on error
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    // Updated addSkill function
+    /**
+     * Loads a single skill by its ID. It first tries to find the skill in the
+     * locally cached list. If not found, it fetches it from the API.
+     */
+    fun loadSkillById(skillId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _selectedSkill.value = null // Clear previous skill
+            try {
+                // Prefer local version if available
+                val localSkill = _skills.value.find { it.id == skillId }
+                if (localSkill != null) {
+                    _selectedSkill.value = localSkill
+                } else {
+                    // Fetch from network if not found locally
+                    _selectedSkill.value = skillApiService.getSkill(skillId)
+                }
+            } catch (e: Exception) {
+                Log.e("SkillListViewModel", "Failed to load skill $skillId", e)
+                // Optionally expose error to UI
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     fun addSkill(
         title: String,
         description: String,
@@ -66,14 +95,12 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // If a video is selected, upload it first
                 val videoUrl = if (videoUri != null) {
                     uploadVideoAndGetUrl(trainerId, videoUri)
                 } else {
-                    null // No video to upload
+                    null
                 }
 
-                // Now create the skill with the video URL (if available)
                 val request = CreateSkillRequest(
                     title = title,
                     description = description,
@@ -85,10 +112,9 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
                 )
                 skillApiService.createSkill(request)
                 _addSkillResult.emit(Result.success(Unit))
-                fetchSkills() // Refresh the list
+                loadSkills() // Refresh the master list
 
             } catch (e: Exception) {
-                // Catch any exception from the upload or skill creation process
                 Log.e("SkillListViewModel", "Failed to add skill with video", e)
                 val errorMessage = when (e) {
                     is HttpException -> "Server Error: ${e.message()}"
@@ -102,34 +128,28 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
         }
     }
 
-    // Orchestration function for video upload
     private suspend fun uploadVideoAndGetUrl(trainerId: String, videoUri: Uri): String {
-        // 1. Get metadata from URI
         val fileName = getFileName(videoUri) ?: "video.mp4"
         val contentType = application.contentResolver.getType(videoUri) ?: "video/*"
 
-        // 2. Get a pre-signed URL from our server
         val presignRequest = PresignRequest(trainerId, fileName, contentType)
         val presignResponse = skillApiService.getPresignedUrl(presignRequest)
 
-        // 3. Create a RequestBody from the video file's content
         val inputStream = application.contentResolver.openInputStream(videoUri)
             ?: throw IOException("Could not open input stream for video URI")
         val requestBody = inputStream.readBytes().toRequestBody(contentType.toMediaTypeOrNull())
-        
-        inputStream.close() // Close the stream
 
-        // 4. Upload the video to the pre-signed URL
+        inputStream.close()
+
         val uploadResponse = skillApiService.uploadVideo(presignResponse.uploadUrl, requestBody)
         if (!uploadResponse.isSuccessful) {
             throw IOException("Video upload failed with code: ${uploadResponse.code()}")
         }
 
-        // 5. Return the public URL to be saved with the skill
+        // The fix is to return the permanent, public URL, not the temporary upload URL.
         return presignResponse.publicUrl
     }
 
-    // Helper to get file name from content URI
     private fun getFileName(uri: Uri): String? {
         var result: String? = null
         if (uri.scheme == "content") {
@@ -154,7 +174,6 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
     }
 }
 
-// A Factory is needed to create the ViewModel with the Application parameter
 class SkillListViewModelFactory(private val application: Application) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SkillListViewModel::class.java)) {

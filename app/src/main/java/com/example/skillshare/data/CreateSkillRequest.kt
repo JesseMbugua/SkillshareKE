@@ -10,5 +10,5 @@ data class CreateSkillRequest(
     val cost: Double,
     val location: String,
     val trainerId: String,
-    val videoUrl: String? = null
+    val videoUrl: String?
 )

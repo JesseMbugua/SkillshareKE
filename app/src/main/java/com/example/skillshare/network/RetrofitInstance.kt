@@ -9,27 +9,31 @@ import retrofit2.Retrofit
 
 object RetrofitInstance {
 
+    // Standard IP for the Android emulator to connect to the host machine's localhost
     private const val BASE_URL = "http://10.0.2.2:8080/"
 
-    // Configure a Json instance to be lenient about unknown keys
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
 
-    // Create a logging interceptor
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // Create a custom OkHttpClient and add the interceptor
     private val client = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .build()
 
-    val api: SkillApiService by lazy {
+    private val retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(client) // Add the custom client to Retrofit
+            .client(client)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-            .create(SkillApiService::class.java)
+    }
+
+    val api: SkillApiService by lazy {
+        retrofit.create(SkillApiService::class.java)
     }
 }

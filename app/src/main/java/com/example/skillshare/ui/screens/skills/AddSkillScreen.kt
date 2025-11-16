@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +82,7 @@ fun AddSkillScreen(
     var duration by remember { mutableStateOf("") }
     var cost by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
     var selectedVideoUri by remember { mutableStateOf<Uri?>(null) }
     var selectedVideoName by remember { mutableStateOf("No video selected") }
 
@@ -93,7 +95,6 @@ fun AddSkillScreen(
 
     LaunchedEffect(Unit) {
         viewModel.addSkillResult.collectLatest { result ->
-            isLoading = false
             result.fold(
                 onSuccess = {
                     scope.launch {
@@ -138,7 +139,8 @@ fun AddSkillScreen(
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Skill Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = isLoading
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -148,7 +150,8 @@ fun AddSkillScreen(
                 onValueChange = { description = it },
                 label = { Text("Description") },
                 modifier = Modifier.fillMaxWidth(),
-                maxLines = 5
+                maxLines = 5,
+                readOnly = isLoading
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -158,7 +161,8 @@ fun AddSkillScreen(
                 onValueChange = { duration = it },
                 label = { Text("Duration (in minutes)") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                readOnly = isLoading
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -168,7 +172,8 @@ fun AddSkillScreen(
                 onValueChange = { cost = it },
                 label = { Text("Cost") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                readOnly = isLoading
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,13 +182,14 @@ fun AddSkillScreen(
                 value = location,
                 onValueChange = { location = it },
                 label = { Text("Location") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                readOnly = isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(onClick = { videoPickerLauncher.launch("video/*") }) {
+                OutlinedButton(onClick = { videoPickerLauncher.launch("video/*") }, enabled = !isLoading) {
                     Icon(Icons.Default.Videocam, contentDescription = "Select Video")
                     Spacer(Modifier.width(8.dp))
                     Text("Select Video")
@@ -225,13 +231,12 @@ fun AddSkillScreen(
                         scope.launch { snackbarHostState.showSnackbar("Error: Could not verify user. Please log in again.") }
                         return@Button
                     }
-                    
+
                     if (selectedVideoUri == null) {
-                         scope.launch { snackbarHostState.showSnackbar("Please select a video to upload.") }
+                        scope.launch { snackbarHostState.showSnackbar("Please select a video to upload.") }
                         return@Button
                     }
 
-                    isLoading = true
                     viewModel.addSkill(
                         title = title,
                         description = description,
@@ -246,7 +251,7 @@ fun AddSkillScreen(
                 enabled = !isLoading
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
                     Text("Save Skill")
                 }

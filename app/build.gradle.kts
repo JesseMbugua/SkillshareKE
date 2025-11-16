@@ -78,9 +78,9 @@ dependencies {
     // --- Networking --
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-    // Gson converter removed
-    // implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
 
     // --- Testing --
     debugImplementation("androidx.compose.ui:ui-tooling:1.7.4")

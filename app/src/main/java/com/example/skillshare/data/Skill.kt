@@ -10,5 +10,6 @@ data class Skill(
     val duration: Int = 0,
     val cost: Double = 0.0,
     val location: String = "",
-    val videoUrl: String = ""
+    val videoUrl: String = "",
+    val trainerId: String = ""
 )

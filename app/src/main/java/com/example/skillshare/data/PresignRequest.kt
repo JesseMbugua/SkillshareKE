@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PresignRequest(
     val trainerId: String,
-    val filename: String,
+    val fileName: String,
     val contentType: String
 )

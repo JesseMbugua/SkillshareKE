@@ -148,7 +148,7 @@ fun TrainerDashboard(navController: NavController, trainerId: String) {
                         navController.navigate(Screen.AddSkill.createRoute(trainerId))
                     },
                     onViewSkills = {
-                        navController.navigate(Screen.TrainerSkills.route)
+                        navController.navigate(Screen.TrainerSkills.createRoute(trainerId))
                     }
                 )
             }
