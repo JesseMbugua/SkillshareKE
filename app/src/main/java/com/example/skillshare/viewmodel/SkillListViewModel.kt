@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.skillshare.data.CreateSkillRequest
 import com.example.skillshare.data.PresignRequest
+import com.example.skillshare.data.PresignResponse
 import com.example.skillshare.data.Skill
 import com.example.skillshare.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,11 +44,21 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
         loadSkills() // Load all skills initially
     }
 
-    fun loadSkills(trainerId: String? = null) {
+    fun loadSkills(
+        trainerId: String? = null,
+        price: Double? = null,
+        location: String? = null,
+        email: String? = null
+    ) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _skills.value = skillApiService.getSkills(trainerId)
+                _skills.value = skillApiService.getSkills(
+                    trainerId = trainerId,
+                    price = price,
+                    location = location,
+                    email = email
+                )
             } catch (e: Exception) {
                 Log.e("SkillListViewModel", "Failed to fetch skills", e)
                 _skills.value = emptyList() // Reset on error

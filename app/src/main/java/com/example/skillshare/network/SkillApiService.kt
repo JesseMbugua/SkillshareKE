@@ -21,7 +21,12 @@ interface SkillApiService {
     suspend fun createSkill(@Body request: CreateSkillRequest): Skill
 
     @GET("skills")
-    suspend fun getSkills(@Query("trainerId") trainerId: String? = null): List<Skill>
+    suspend fun getSkills(
+        @Query("trainerId") trainerId: String? = null,
+        @Query("price") price: Double? = null,
+        @Query("location") location: String? = null,
+        @Query("email") email: String? = null
+    ): List<Skill>
 
     @GET("skills/{id}")
     suspend fun getSkill(@Path("id") id: String): Skill
@@ -31,7 +36,7 @@ interface SkillApiService {
 
     @DELETE("skills/{id}")
     suspend fun deleteSkill(@Path("id") id: String)
-    
+
     @POST("presign")
     suspend fun getPresignedUrl(@Body request: PresignRequest): PresignResponse
 

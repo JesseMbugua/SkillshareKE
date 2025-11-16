@@ -85,6 +85,15 @@ fun SkillDetailsScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Display the video URL for debugging purposes
+                    Text(
+                        text = "Video URL: ${skill?.videoUrl ?: "Not available"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(skill!!.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
