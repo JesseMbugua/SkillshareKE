@@ -13,11 +13,9 @@ import com.example.skillshare.data.Skill
 import com.example.skillshare.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -31,17 +29,18 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
     private val _skills = MutableStateFlow<List<Skill>>(emptyList())
     val skills: StateFlow<List<Skill>> = _skills.asStateFlow()
 
+    // This holds the currently viewed skill
+    private val _selectedSkill = MutableStateFlow<Skill?>(null)
+    val selectedSkill: StateFlow<Skill?> = _selectedSkill.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
     private val _addSkillResult = MutableSharedFlow<Result<Unit>>()
     val addSkillResult = _addSkillResult.asSharedFlow()
 
-    private val _selectedSkill = MutableStateFlow<Skill?>(null)
-    val selectedSkill = _selectedSkill.asStateFlow()
-
     init {
-        loadSkills()
+        loadSkills() // Load all skills initially
     }
 
     fun loadSkills(trainerId: String? = null) {
@@ -51,17 +50,39 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
                 _skills.value = skillApiService.getSkills(trainerId)
             } catch (e: Exception) {
                 Log.e("SkillListViewModel", "Failed to fetch skills", e)
-                _skills.value = emptyList()
+                _skills.value = emptyList() // Reset on error
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
+    /**
+     * Loads a single skill by its ID. It first tries to find the skill in the
+     * locally cached list. If not found, it fetches it from the API.
+     */
     fun loadSkillById(skillId: String) {
-        _selectedSkill.value = _skills.value.find { it.id == skillId }
+        viewModelScope.launch {
+            _isLoading.value = true
+            _selectedSkill.value = null // Clear previous skill
+            try {
+                // Prefer local version if available
+                val localSkill = _skills.value.find { it.id == skillId }
+                if (localSkill != null) {
+                    _selectedSkill.value = localSkill
+                } else {
+                    // Fetch from network if not found locally
+                    _selectedSkill.value = skillApiService.getSkill(skillId)
+                }
+            } catch (e: Exception) {
+                Log.e("SkillListViewModel", "Failed to load skill $skillId", e)
+                // Optionally expose error to UI
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
-    
+
     fun addSkill(
         title: String,
         description: String,
@@ -125,6 +146,7 @@ class SkillListViewModel(private val application: Application) : ViewModel() {
             throw IOException("Video upload failed with code: ${uploadResponse.code()}")
         }
 
+        // The fix is to return the permanent, public URL, not the temporary upload URL.
         return presignResponse.publicUrl
     }
 

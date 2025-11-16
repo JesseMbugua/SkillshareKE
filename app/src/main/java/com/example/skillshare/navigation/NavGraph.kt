@@ -10,8 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.skillshare.ui.screens.details.SkillDetailScreen
-import com.example.skillshare.ui.screens.details.TrainerDetailScreen
+import com.example.skillshare.ui.screens.skills.SkillDetailsScreen
 import com.example.skillshare.ui.screens.skills.AddSkillScreen
 import com.example.skillshare.ui.screens.payment.PaymentScreen
 import com.example.skillshare.ui.screens.profiles.LearnerProfileScreen
@@ -38,11 +37,8 @@ sealed class Screen(
     object Search : Screen("search", "Search")
     object Reviews : Screen("reviews", "Reviews")
     object LearnerProfile : Screen("learner_profile", "Profile")
-    object TrainerDetails : Screen("trainer_details/{skillId}", "Trainer Details") {
-        fun createRoute(skillId: String) = "trainer_details/$skillId"
-    }
-    object UserSkillDetails : Screen("user_skill_details/{skillId}", "Skill Details") {
-        fun createRoute(skillId: String) = "user_skill_details/$skillId"
+    object SkillDetails : Screen("skill_details/{skillId}", "Skill Details") {
+        fun createRoute(skillId: String) = "skill_details/$skillId"
     }
     object TrainerProfile : Screen("trainer_profile", "Trainer")
     object Payment : Screen("payment", "Payment")
@@ -94,19 +90,19 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 navController = navController,
                 viewModel = skillListViewModel,
                 onSkillClick = { skillId ->
-                    navController.navigate(Screen.UserSkillDetails.createRoute(skillId))
+                    navController.navigate(Screen.SkillDetails.createRoute(skillId))
                 }
             )
         }
         composable(
-            route = Screen.UserSkillDetails.route,
+            route = Screen.SkillDetails.route,
             arguments = listOf(navArgument("skillId") { type = NavType.StringType })
         ) { backStackEntry ->
             backStackEntry.arguments?.getString("skillId")?.let { skillId ->
-                SkillDetailScreen(
-                    navController = navController,
+                SkillDetailsScreen(
                     skillId = skillId,
-                    viewModel = skillListViewModel
+                    viewModel = skillListViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
@@ -128,24 +124,12 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             TrainerSkillsScreen(
                 navController = navController,
                 onSkillClick = { skillId ->
-                    navController.navigate(Screen.TrainerDetails.createRoute(skillId))
+                    navController.navigate(Screen.SkillDetails.createRoute(skillId))
                 },
                 onBack = { navController.popBackStack() },
                 viewModel = skillListViewModel,
                 trainerId = trainerId
             )
-        }
-        composable(
-            route = Screen.TrainerDetails.route,
-            arguments = listOf(navArgument("skillId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            backStackEntry.arguments?.getString("skillId")?.let { skillId ->
-                TrainerDetailScreen(
-                    navController = navController,
-                    skillId = skillId,
-                    viewModel = skillListViewModel
-                )
-            }
         }
         composable(
             route = Screen.AddSkill.route,
