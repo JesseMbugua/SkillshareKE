@@ -34,22 +34,24 @@ sealed class Screen(
     object Search : Screen("search", "Search")
     object Reviews : Screen("reviews", "Reviews")
     object LearnerProfile : Screen("learner_profile", "Profile")
-    // Update route to include placeholder for consistency
     object Details : Screen("details/{skillId}", "Details") {
         fun createRoute(skillId: String) = "details/$skillId"
     }
     object TrainerProfile : Screen("trainer_profile", "Trainer")
     object Payment : Screen("payment", "Payment")
-    object TrainerDashboard : Screen("trainer_dashboard", "Trainer Dashboard")
+    object TrainerDashboard : Screen("trainer_dashboard/{trainerId}", "Trainer Dashboard") {
+        fun createRoute(trainerId: String) = "trainer_dashboard/$trainerId"
+    }
     object UserDashboard : Screen("user_dashboard", "User Dashboard")
     object Profile : Screen("profile", "Profile")
     object TrainerSkills : Screen("trainer_skills", "Trainer Skills")
-    // Update route to include placeholder for consistency
     object Chat : Screen("chat/{conversationId}", "Chat") {
         fun createRoute(conversationId: String) = "chat/$conversationId"
     }
     object Conversations : Screen("conversations", "Conversations")
-    object AddSkill : Screen("add_skill", "Add Skill")
+    object AddSkill : Screen("add_skill_screen/{trainerId}", "Add Skill") {
+        fun createRoute(trainerId: String) = "add_skill_screen/$trainerId"
+    }
 }
 
 @Composable
@@ -67,11 +69,16 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.Signup.route) { SignupScreen(navController) }
 
         //  Dashboards
-        composable(Screen.TrainerDashboard.route) {
+        composable(
+            route = Screen.TrainerDashboard.route,
+            arguments = listOf(navArgument("trainerId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val trainerId = backStackEntry.arguments?.getString("trainerId") ?: ""
             TrainerDashboard(
-                navController = navController
+                navController = navController,
+                trainerId = trainerId
             )
-         }
+        }
         composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
 
         //  Main App Pages
@@ -104,11 +111,17 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 viewModel = skillListViewModel
             )
         }
-        composable(Screen.AddSkill.route) {
+        composable(
+            route = Screen.AddSkill.route,
+            arguments = listOf(navArgument("trainerId") { type = NavType.StringType })
+        ) {
+            backStackEntry ->
+            val trainerId = backStackEntry.arguments?.getString("trainerId") ?: ""
             AddSkillScreen(
                 viewModel = skillListViewModel, // Pass the shared ViewModel
                 onSkillAdded = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                trainerId = trainerId
             )
         }
 

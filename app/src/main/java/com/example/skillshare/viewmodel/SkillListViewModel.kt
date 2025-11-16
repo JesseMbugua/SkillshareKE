@@ -45,10 +45,10 @@ class SkillListViewModel : ViewModel() {
         }
     }
 
-    fun addSkill(title: String, description: String, duration: Int, cost: Double, location: String) {
+    fun addSkill(title: String, description: String, duration: Int, cost: Double, location: String, trainerId: String) {
         viewModelScope.launch {
             try {
-                val request = CreateSkillRequest(title, description, duration, cost, location)
+                val request = CreateSkillRequest(title, description, duration, cost, location, trainerId)
                 skillApiService.createSkill(request)
                 _addSkillResult.emit(Result.success(Unit))
                 fetchSkills() // Refresh the list after adding

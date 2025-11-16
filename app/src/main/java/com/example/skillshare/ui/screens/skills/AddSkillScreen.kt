@@ -40,7 +40,8 @@ import kotlinx.coroutines.launch
 fun AddSkillScreen(
     viewModel: SkillListViewModel,
     onBack: () -> Unit,
-    onSkillAdded: () -> Unit
+    onSkillAdded: () -> Unit,
+    trainerId: String
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -52,20 +53,17 @@ fun AddSkillScreen(
     var location by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    // Listen for the result from the ViewModel
     LaunchedEffect(Unit) {
         viewModel.addSkillResult.collectLatest { result ->
-            isLoading = false // Stop loading when result is received
+            isLoading = false
             result.fold(
                 onSuccess = {
-                    // On success, show message and then navigate.
                     scope.launch {
                         snackbarHostState.showSnackbar("Skill added successfully!")
                         onSkillAdded()
                     }
                 },
                 onFailure = { exception ->
-                    // On failure, show the clear error message from the ViewModel
                     scope.launch {
                         snackbarHostState.showSnackbar(exception.message ?: "An unknown error occurred")
                     }
@@ -166,14 +164,19 @@ fun AddSkillScreen(
                         return@Button
                     }
 
+                    if (trainerId.isBlank()) {
+                        scope.launch { snackbarHostState.showSnackbar("Error: Could not verify user. Please log in again.") }
+                        return@Button
+                    }
+
                     isLoading = true
-                    // DELEGATE the work to the ViewModel. The try-catch is gone.
                     viewModel.addSkill(
                         title = title,
                         description = description,
                         duration = durationInt,
                         cost = costDouble,
-                        location = location
+                        location = location,
+                        trainerId = trainerId
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

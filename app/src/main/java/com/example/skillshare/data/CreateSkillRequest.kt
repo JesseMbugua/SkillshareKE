@@ -8,5 +8,6 @@ data class CreateSkillRequest(
     val description: String,
     val duration: Int,
     val cost: Double,
-    val location: String
+    val location: String,
+    val trainerId: String
 )

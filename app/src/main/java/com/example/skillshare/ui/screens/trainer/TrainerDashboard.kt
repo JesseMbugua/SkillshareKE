@@ -28,8 +28,7 @@ import androidx.navigation.NavController
 import com.example.skillshare.navigation.Screen
 import com.example.skillshare.ui.theme.SkillshareTheme
 import androidx.compose.ui.platform.LocalContext
-
-
+import com.google.firebase.auth.FirebaseAuth
 
 
 data class Transaction(
@@ -54,7 +53,7 @@ val dummyTransactions = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainerDashboard(navController: NavController) {
+fun TrainerDashboard(navController: NavController, trainerId: String) {
     var selectedBottomNavItem by remember { mutableStateOf("Dashboard") }
 
     Scaffold(
@@ -66,7 +65,7 @@ fun TrainerDashboard(navController: NavController) {
                     selectedBottomNavItem = screenName
 
                     when (screenName) {
-                        "Dashboard" -> navController.navigate(Screen.TrainerDashboard.route) { launchSingleTop = true }
+                        "Dashboard" -> navController.navigate(Screen.TrainerDashboard.createRoute(trainerId)) { launchSingleTop = true }
                         "Profile" -> navController.navigate(Screen.TrainerProfile.route) { launchSingleTop = true }
                         "Notifications" -> navController.navigate(Screen.Conversations.route) { launchSingleTop = true }
                     }
@@ -91,9 +90,12 @@ fun TrainerDashboard(navController: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
             }
             item {
-
                 ActionButtons(
-                    onAddSkill = { navController.navigate(Screen.AddSkill.route) },
+                    onAddSkill = {
+                        // Use the reliable trainerId passed as a parameter
+                        val route = Screen.AddSkill.createRoute(trainerId)
+                        navController.navigate(route)
+                    },
                     onViewSkills = { navController.navigate(Screen.TrainerSkills.route) }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
@@ -109,9 +111,6 @@ fun TrainerDashboard(navController: NavController) {
         }
     }
 }
-
-
-
 
 @Composable
 fun DashboardHeader(username: String, profileImageUrl: String?) {

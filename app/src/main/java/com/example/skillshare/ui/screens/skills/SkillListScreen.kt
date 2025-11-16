@@ -122,7 +122,7 @@ fun SkillCard(
                 maxLines = 2
             )
             Text(
-                text = "$${skill.cost}",
+                text = "KSH ${skill.cost}",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.align(Alignment.End)
             )
