@@ -8,28 +8,29 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.filled.Storefront
-
 import androidx.navigation.NavController
 import com.example.skillshare.navigation.Screen
-import com.example.skillshare.ui.theme.SkillshareTheme
-import androidx.compose.ui.platform.LocalContext
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import java.util.Locale
+import java.util.Date
 
+// ------------------ MODELS ------------------------
 
 data class Transaction(
     val id: Int,
@@ -40,77 +41,139 @@ data class Transaction(
     val icon: ImageVector
 )
 
-enum class TransactionStatus {
-    SUCCESS, FAILED
-}
+enum class TransactionStatus { SUCCESS, FAILED }
 
-val dummyTransactions = listOf(
-    Transaction(1, "Mary Akinyi", "November 4th, 2025", "Payment", TransactionStatus.SUCCESS, Icons.Default.Storefront),
-    Transaction(2, "Joel Karanja", "October 31st, 2024", "Transfer", TransactionStatus.SUCCESS, Icons.Default.SyncAlt),
-    Transaction(3, "Stephanie Joy", "October 21st, 2024", "Payment", TransactionStatus.FAILED, Icons.Default.School)
-)
-
+// ------------------ SCREEN ------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainerDashboard(navController: NavController, trainerId: String) {
-    var selectedBottomNavItem by remember { mutableStateOf("Dashboard") }
+
+    val db = FirebaseFirestore.getInstance()
+
+    var displayName by remember { mutableStateOf("Loading...") }
+    var photoUrl by remember { mutableStateOf<String?>(null) }
+    var balance by remember { mutableStateOf("0 Ksh") }
+    var transactions by remember { mutableStateOf<List<Transaction>>(emptyList()) }
+
+    // Fetch all trainer data
+    LaunchedEffect(trainerId) {
+
+        // Fetch Profile
+        db.collection("users").document(trainerId)
+            .addSnapshotListener { doc, _ ->
+                if (doc != null && doc.exists()) {
+                    displayName = doc.getString("displayName") ?: "Unknown"
+                    photoUrl = doc.getString("photoUrl")
+                }
+            }
+
+        // Fetch Wallet
+        db.collection("trainerWallets").document(trainerId)
+            .addSnapshotListener { doc, _ ->
+                if (doc != null && doc.exists()) {
+                    val bal = doc.getDouble("balance") ?: 0.0
+                    balance = "${bal.toInt()} Ksh"
+                }
+            }
+
+        // Fetch Transactions
+        db.collection("trainerTransactions")
+            .document(trainerId)
+            .collection("transactions")
+            .orderBy("date", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null) {
+                    transactions = snapshot.documents.mapNotNull { tx ->
+                        Transaction(
+                            id = tx.id.hashCode(),
+                            title = tx.getString("buyerName") ?: "Unknown Buyer",
+                            date = formatDate(tx.getTimestamp("date")?.toDate()),
+                            type = tx.getString("type") ?: "payment",
+                            status = if (tx.getString("status") == "success")
+                                TransactionStatus.SUCCESS
+                            else TransactionStatus.FAILED,
+                            icon = Icons.Default.Storefront
+                        )
+                    }
+                }
+            }
+    }
+
+    var selectedTab by remember { mutableStateOf("Dashboard") }
 
     Scaffold(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         bottomBar = {
             DashboardBottomNavigation(
-                selectedItem = selectedBottomNavItem,
-                onItemSelected = { screenName ->
-                    selectedBottomNavItem = screenName
-
-                    when (screenName) {
-                        "Dashboard" -> navController.navigate(Screen.TrainerDashboard.createRoute(trainerId)) { launchSingleTop = true }
-                        "Profile" -> navController.navigate(Screen.TrainerProfile.route) { launchSingleTop = true }
-                        "Notifications" -> navController.navigate(Screen.Conversations.route) { launchSingleTop = true }
+                selectedItem = selectedTab,
+                onItemSelected = {
+                    selectedTab = it
+                    when (it) {
+                        "Dashboard" -> {}
+                        "Profile" -> navController.navigate(Screen.TrainerProfile.route)
+                        "Notifications" -> navController.navigate(Screen.Conversations.route)
                     }
                 }
             )
         }
     ) { paddingValues ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(bottom = 16.dp)
+                .padding(horizontal = 16.dp)
         ) {
+
+            item { Spacer(Modifier.height(16.dp)) }
+
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-                DashboardHeader(username = "Kimberly Wangari", profileImageUrl = null)
-                Spacer(modifier = Modifier.height(24.dp))
+                DashboardHeader(
+                    username = displayName,
+                    profileImageUrl = photoUrl
+                )
             }
+
+            item { Spacer(Modifier.height(24.dp)) }
+
             item {
-                BalanceCard(balance = "5,500.50 Ksh")
-                Spacer(modifier = Modifier.height(24.dp))
+                BalanceCard(balance = balance)
             }
+
+            item { Spacer(Modifier.height(24.dp)) }
+
             item {
                 ActionButtons(
                     onAddSkill = {
-                        // Use the reliable trainerId passed as a parameter
-                        val route = Screen.AddSkill.createRoute(trainerId)
-                        navController.navigate(route)
+                        navController.navigate(Screen.AddSkill.createRoute(trainerId))
                     },
-                    onViewSkills = { navController.navigate(Screen.TrainerSkills.route) }
+                    onViewSkills = {
+                        navController.navigate(Screen.TrainerSkills.route)
+                    }
                 )
-                Spacer(modifier = Modifier.height(24.dp))
             }
-            item {
-                TransactionsHeader()
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            items(dummyTransactions) { transaction ->
-                TransactionItem(transaction = transaction)
-                Spacer(modifier = Modifier.height(8.dp))
+
+            item { Spacer(Modifier.height(24.dp)) }
+
+            item { TransactionsHeader() }
+
+            item { Spacer(Modifier.height(16.dp)) }
+
+            if (transactions.isEmpty()) {
+                item {
+                    Text("No transactions yet.")
+                }
+            } else {
+                items(transactions) { tx ->
+                    TransactionItem(tx)
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
     }
 }
+
+// ------------------ UI COMPONENTS ------------------------
 
 @Composable
 fun DashboardHeader(username: String, profileImageUrl: String?) {
@@ -120,33 +183,16 @@ fun DashboardHeader(username: String, profileImageUrl: String?) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(
-                text = "Welcome back",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = username,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.Default.WorkspacePremium,
-                    contentDescription = "Priority",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Text("Welcome back")
+            Text(username, fontWeight = FontWeight.Bold)
         }
+
         Image(
             imageVector = Icons.Outlined.AccountCircle,
-            contentDescription = "Profile Image",
+            contentDescription = "",
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
         )
     }
 }
@@ -155,136 +201,83 @@ fun DashboardHeader(username: String, profileImageUrl: String?) {
 fun BalanceCard(balance: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(18.dp)
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Text(
-                text = balance,
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Balance",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-            )
+        Column(Modifier.padding(20.dp)) {
+            Text(balance, style = MaterialTheme.typography.headlineLarge)
+            Text("Balance")
         }
     }
 }
 
 @Composable
 fun ActionButtons(onAddSkill: () -> Unit, onViewSkills: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
-    ) {
-        ActionButton(icon = Icons.Default.Add, label = "Add Skill", onClick = onAddSkill)
-        ActionButton(icon = Icons.Default.List, label = "View Skills", onClick = onViewSkills)
-    }
-}
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
 
-@Composable
-fun ActionButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlinedButton(
-            onClick = onClick,
-            shape = CircleShape,
-            modifier = Modifier.size(64.dp),
-            contentPadding = PaddingValues(0.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-            ),
-            border = null
-        ) {
-            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(32.dp))
+        OutlinedButton(onClick = onAddSkill) {
+            Icon(Icons.Default.Add, "")
+            Spacer(Modifier.width(8.dp))
+            Text("Add Skill")
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = label, style = MaterialTheme.typography.labelLarge)
+
+        OutlinedButton(onClick = onViewSkills) {
+            Icon(Icons.Default.List, "")
+            Spacer(Modifier.width(8.dp))
+            Text("View Skills")
+        }
     }
 }
 
 @Composable
 fun TransactionsHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = "Transactions", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text(
-            text = "Sort by: Latest",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
+    Text("Transactions", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
-    val statusColor = if (transaction.status == TransactionStatus.SUCCESS) Color(0xFF388E3C) else MaterialTheme.colorScheme.error
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = transaction.icon,
-            contentDescription = transaction.title,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(8.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+fun TransactionItem(tx: Transaction) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(tx.icon, contentDescription = "", modifier = Modifier.size(40.dp))
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(tx.title, fontWeight = FontWeight.Bold)
+            Text("${tx.date} • ${tx.type}")
+        }
+        Spacer(Modifier.weight(1f))
+        Text(
+            tx.status.name,
+            color = if (tx.status == TransactionStatus.SUCCESS) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.error
         )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = transaction.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            Text(text = "${transaction.date} • ${transaction.type}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Surface(shape = RoundedCornerShape(12.dp), color = statusColor.copy(alpha = 0.1f)) {
-            Text(
-                text = transaction.status.name.lowercase().replaceFirstChar { it.uppercase() },
-                color = statusColor,
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-            )
-        }
     }
 }
 
 @Composable
 fun DashboardBottomNavigation(selectedItem: String, onItemSelected: (String) -> Unit) {
-
-    val items = listOf("Dashboard", "Transfer", "Notifications", "Profile")
-    val icons = mapOf(
-        "Dashboard" to Icons.Outlined.Home,
-        "Transfer" to Icons.Default.SyncAlt,
-        "Notifications" to Icons.Outlined.ChatBubbleOutline,
-        "Profile" to Icons.Outlined.Person
-    )
-
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-        items.forEach { screen ->
+    NavigationBar {
+        listOf("Dashboard", "Notifications", "Profile").forEach {
             NavigationBarItem(
-                icon = { Icon(icons[screen]!!, contentDescription = screen) },
-                label = { Text(screen) },
-                selected = selectedItem == screen,
-                onClick = { onItemSelected(screen) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.primary
-                )
+                selected = (selectedItem == it),
+                onClick = { onItemSelected(it) },
+                icon = {
+                    when (it) {
+                        "Dashboard" -> Icon(Icons.Default.Storefront, "")
+                        "Notifications" -> Icon(Icons.Default.Notifications, "")
+                        else -> Icon(Icons.Default.Person, "")
+                    }
+                },
+                label = { Text(it) }
             )
         }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DashboardPreview() {
+// ------------------ UTILS ------------------------
 
+fun formatDate(date: Date?): String {
+    if (date == null) return "--"
+    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    return sdf.format(date)
 }
-
-annotation class TrainerDashboard
