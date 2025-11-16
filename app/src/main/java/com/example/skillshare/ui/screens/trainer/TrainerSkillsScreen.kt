@@ -24,24 +24,35 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.skillshare.data.Skill
 import com.example.skillshare.viewmodel.SkillListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainerSkillsScreen(
+    navController: NavController,
     onSkillClick: (String) -> Unit,
     onBack: () -> Unit,
-    viewModel: SkillListViewModel
+    viewModel: SkillListViewModel,
+    trainerId: String
 ) {
     val skills by viewModel.skills.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+
+    // Use LaunchedEffect to load the skills for the specific trainer when the
+    // screen is first composed. The list of skills is fetched directly from the
+    // server, which is more efficient than loading all skills and filtering.
+    LaunchedEffect(trainerId, viewModel) {
+        viewModel.loadSkills(trainerId)
+    }
 
     Scaffold(
         topBar = {

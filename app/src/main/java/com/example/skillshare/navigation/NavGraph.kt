@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.skillshare.ui.screens.details.SkillDetailScreen
 import com.example.skillshare.ui.screens.details.TrainerDetailScreen
 import com.example.skillshare.ui.screens.skills.AddSkillScreen
 import com.example.skillshare.ui.screens.payment.PaymentScreen
@@ -37,8 +38,11 @@ sealed class Screen(
     object Search : Screen("search", "Search")
     object Reviews : Screen("reviews", "Reviews")
     object LearnerProfile : Screen("learner_profile", "Profile")
-    object Details : Screen("details/{skillId}", "Details") {
-        fun createRoute(skillId: String) = "details/$skillId"
+    object TrainerDetails : Screen("trainer_details/{skillId}", "Trainer Details") {
+        fun createRoute(skillId: String) = "trainer_details/$skillId"
+    }
+    object UserSkillDetails : Screen("user_skill_details/{skillId}", "Skill Details") {
+        fun createRoute(skillId: String) = "user_skill_details/$skillId"
     }
     object TrainerProfile : Screen("trainer_profile", "Trainer")
     object Payment : Screen("payment", "Payment")
@@ -47,7 +51,9 @@ sealed class Screen(
     }
     object UserDashboard : Screen("user_dashboard", "User Dashboard")
     object Profile : Screen("profile", "Profile")
-    object TrainerSkills : Screen("trainer_skills", "Trainer Skills")
+    object TrainerSkills : Screen("trainer_skills/{trainerId}", "Trainer Skills") {
+        fun createRoute(trainerId: String) = "trainer_skills/$trainerId"
+    }
     object Chat : Screen("chat/{conversationId}", "Chat") {
         fun createRoute(conversationId: String) = "chat/$conversationId"
     }
@@ -59,11 +65,8 @@ sealed class Screen(
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
-    // Get the application context to create the ViewModel Factory
     val application = LocalContext.current.applicationContext as Application
     val skillListViewModelFactory = SkillListViewModelFactory(application)
-
-    // Create a shared ViewModel scoped to this NavHost using the factory.
     val skillListViewModel: SkillListViewModel = viewModel(factory = skillListViewModelFactory)
 
     NavHost(
@@ -71,69 +74,94 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         startDestination = Screen.Login.route,
         modifier = modifier
     ) {
-        //  Auth routes
+        // Auth routes
         composable(Screen.Login.route) { LoginScreen(navController) }
         composable(Screen.Signup.route) { SignupScreen(navController) }
 
-        //  Dashboards
+        // Dashboards
         composable(
             route = Screen.TrainerDashboard.route,
             arguments = listOf(navArgument("trainerId") { type = NavType.StringType })
         ) { backStackEntry ->
             val trainerId = backStackEntry.arguments?.getString("trainerId") ?: ""
-            TrainerDashboard(
-                navController = navController,
-                trainerId = trainerId
-            )
+            TrainerDashboard(navController = navController, trainerId = trainerId)
         }
         composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
 
-        //  Main App Pages
-        composable(Screen.Search.route) { SearchScreen(navController) }
-        composable(
-            route = Screen.Details.route, // Use route from Screen object
-            arguments = listOf(navArgument("skillId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val skillId = backStackEntry.arguments?.getString("skillId")
-            TrainerDetailScreen(
+        // Main App Pages for Users
+        composable(Screen.Search.route) {
+            SearchScreen(
                 navController = navController,
-                skillId = skillId
+                viewModel = skillListViewModel,
+                onSkillClick = { skillId ->
+                    navController.navigate(Screen.UserSkillDetails.createRoute(skillId))
+                }
             )
         }
+        composable(
+            route = Screen.UserSkillDetails.route,
+            arguments = listOf(navArgument("skillId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            backStackEntry.arguments?.getString("skillId")?.let { skillId ->
+                SkillDetailScreen(
+                    navController = navController,
+                    skillId = skillId,
+                    viewModel = skillListViewModel
+                )
+            }
+        }
+
+        // Main App Pages
         composable(Screen.Reviews.route) { ReviewScreen(navController) }
         composable(Screen.Payment.route) { PaymentScreen(navController) }
 
-        //  Profile Management
+        // Profile Management
         composable(Screen.TrainerProfile.route) { TrainerProfileScreen(navController) }
         composable(Screen.LearnerProfile.route) { LearnerProfileScreen(navController) }
 
-        //  Trainer Screens
-        composable(Screen.TrainerSkills.route) {
+        // Trainer-specific screens
+        composable(
+            route = Screen.TrainerSkills.route,
+            arguments = listOf(navArgument("trainerId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val trainerId = backStackEntry.arguments?.getString("trainerId") ?: ""
             TrainerSkillsScreen(
-                // Correctly handle the click and navigate with the skill's ID
+                navController = navController,
                 onSkillClick = { skillId ->
-                    navController.navigate(Screen.Details.createRoute(skillId))
+                    navController.navigate(Screen.TrainerDetails.createRoute(skillId))
                 },
                 onBack = { navController.popBackStack() },
-                viewModel = skillListViewModel
+                viewModel = skillListViewModel,
+                trainerId = trainerId
             )
+        }
+        composable(
+            route = Screen.TrainerDetails.route,
+            arguments = listOf(navArgument("skillId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            backStackEntry.arguments?.getString("skillId")?.let { skillId ->
+                TrainerDetailScreen(
+                    navController = navController,
+                    skillId = skillId,
+                    viewModel = skillListViewModel
+                )
+            }
         }
         composable(
             route = Screen.AddSkill.route,
             arguments = listOf(navArgument("trainerId") { type = NavType.StringType })
-        ) {
-            backStackEntry ->
+        ) { backStackEntry ->
             val trainerId = backStackEntry.arguments?.getString("trainerId") ?: ""
             AddSkillScreen(
-                viewModel = skillListViewModel, // Pass the shared ViewModel
+                viewModel = skillListViewModel,
                 onSkillAdded = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
                 trainerId = trainerId
             )
         }
 
-        //  Messaging
-        composable(Screen.Chat.route) { backStackEntry -> // Use route from Screen object
+        // Messaging
+        composable(Screen.Chat.route) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("conversationId") ?: ""
             ChatScreen(conversationId = id, navController = navController)
         }

@@ -35,26 +35,29 @@ import com.example.skillshare.viewmodel.SkillListViewModel
 @Composable
 fun SkillListScreen(
     onSkillClick: (String) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SkillListViewModel = viewModel()
+    viewModel: SkillListViewModel = viewModel(),
+    title: String = "Skills",
+    onBack: (() -> Unit)? = null
 ) {
     val skills by viewModel.skills.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Trainer Skills") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+            if (onBack != null) {
+                TopAppBar(
+                    title = { Text(title) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
                     }
-                }
-            )
+                )
+            }
         },
         modifier = modifier
     ) { paddingValues ->

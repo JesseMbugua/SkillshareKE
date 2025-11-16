@@ -26,12 +26,11 @@ import com.example.skillshare.viewmodel.SkillListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrainerDetailScreen(
+fun SkillDetailScreen(
     navController: NavController,
     skillId: String,
     viewModel: SkillListViewModel
 ) {
-    // Load the skill details when the screen is shown
     LaunchedEffect(skillId) {
         viewModel.loadSkillById(skillId)
     }
@@ -84,15 +83,15 @@ fun TrainerDetailScreen(
                     text = "Location: ${skill.location}",
                     style = MaterialTheme.typography.bodyMedium
                 )
+                // TODO: Add video player if skill.videoUrl is not null
                 Spacer(Modifier.height(16.dp))
                 Button(
-                    onClick = { /* TODO: Implement edit logic */ },
+                    onClick = { /* TODO: Implement order logic */ },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Edit Skill")
+                    Text("Order")
                 }
             } ?: run {
-                // Show a loading indicator or a "not found" message
                 Text("Loading skill details...")
             }
         }

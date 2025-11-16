@@ -12,6 +12,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 import retrofit2.http.Url
 
 interface SkillApiService {
@@ -20,7 +21,7 @@ interface SkillApiService {
     suspend fun createSkill(@Body request: CreateSkillRequest): Skill
 
     @GET("skills")
-    suspend fun getSkills(): List<Skill>
+    suspend fun getSkills(@Query("trainerId") trainerId: String? = null): List<Skill>
 
     @GET("skills/{id}")
     suspend fun getSkill(@Path("id") id: String): Skill
