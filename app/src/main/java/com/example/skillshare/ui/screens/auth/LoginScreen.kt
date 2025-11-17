@@ -106,7 +106,7 @@ fun LoginScreen(navController: NavController) {
                                         }
 
                                         else -> { // normal user
-                                            navController.navigate(Screen.UserDashboard.route) {
+                                            navController.navigate(Screen.LearnerProfile.route) {
                                                 popUpTo(Screen.Login.route) { inclusive = true }
                                             }
                                         }

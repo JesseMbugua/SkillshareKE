@@ -86,7 +86,9 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             val trainerId = backStackEntry.arguments?.getString("trainerId") ?: ""
             TrainerDashboard(navController = navController, trainerId = trainerId)
         }
-        composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
+        // composable(Screen.UserDashboard.route) { UserDashboardScreen(navController) }
+
+
         composable(Screen.AdminDashboard.route) {
             AdminDashboardScreen(navController)
         }
