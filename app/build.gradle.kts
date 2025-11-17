@@ -69,6 +69,14 @@ dependencies {
     implementation("androidx.media3:media3-ui:$media3_version")
     implementation("androidx.media3:media3-common:$media3_version")
 
+
+    // ExoPlayer / AndroidX Media3 (stable-ish recommended)
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
+    implementation("androidx.media3:media3-common:1.2.0")
+    implementation("androidx.media3:media3-datasource-okhttp:1.2.0")
+// optional if you want OkHttp
+
     // --- Jetpack Compose --
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.compose.ui:ui:1.7.4")

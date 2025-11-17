@@ -1,10 +1,10 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.example.skillshare.ui.composables
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -12,7 +12,11 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import okhttp3.OkHttpClient
 
 @Composable
 fun VideoPlayer(
@@ -21,43 +25,48 @@ fun VideoPlayer(
 ) {
     val context = LocalContext.current
 
-    // Create ExoPlayer instance
     val exoPlayer = remember(videoUrl) {
-        ExoPlayer.Builder(context).build().apply {
 
-            // Load video
-            val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
-            setMediaItem(mediaItem)
+        val okHttpClient = OkHttpClient.Builder()
+            .retryOnConnectionFailure(true)
+            .followRedirects(true)
+            .build()
 
-            // Error logs
-            addListener(object : Player.Listener {
-                override fun onPlayerError(error: PlaybackException) {
-                    Log.e("VideoPlayer", "Error playing video: ${error.message}")
-                }
-            })
+        // FORCE OkHttp for ALL network calls
+        val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
+            .setUserAgent("Mozilla/5.0 (Android) ExoPlayer")
 
-            prepare()
-            playWhenReady = true
-        }
+        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+
+        val renderersFactory = DefaultRenderersFactory(context)
+            .setEnableDecoderFallback(true)
+
+        ExoPlayer.Builder(context)
+            .setRenderersFactory(renderersFactory)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .build()
+            .apply {
+                setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
+
+                addListener(object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        Log.e("VideoPlayer", "#### PLAYER ERROR ####", error)
+                    }
+                })
+
+                prepare()
+                playWhenReady = false
+            }
     }
 
-    // Cleanup when composable leaves screen
     DisposableEffect(Unit) {
         onDispose {
             exoPlayer.release()
         }
     }
 
-    // Render Android PlayerView inside Compose
     AndroidView(
         modifier = modifier,
-        factory = { context ->
-            PlayerView(context).apply {
-                this.player = exoPlayer
-            }
-        },
-        update = { playerView ->
-            playerView.player = exoPlayer
-        }
+        factory = { PlayerView(it).apply { player = exoPlayer } }
     )
 }
