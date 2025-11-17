@@ -9,8 +9,8 @@ import retrofit2.Retrofit
 
 object RetrofitInstance {
 
-    // Standard IP for the Android emulator to connect to the host machine's localhost
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    // ⭐ Your Render backend URL
+    private const val BASE_URL = "https://skillshare-server.onrender.com/"
 
     private val json = Json {
         ignoreUnknownKeys = true
