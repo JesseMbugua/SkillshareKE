@@ -26,7 +26,7 @@ fun UserDashboardScreen(navController: NavController) {
         if (userId != null) {
             db.collection("users").document(userId).get()
                 .addOnSuccessListener { doc ->
-                    name = doc.getString("name") ?: ""
+                    name = doc.getString("displayName") ?: ""
                     //email = doc.getString("email") ?: ""
                    // county = doc.getString("county") ?: ""
                 }

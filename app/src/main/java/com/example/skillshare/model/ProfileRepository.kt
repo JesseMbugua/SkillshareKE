@@ -17,20 +17,18 @@ class ProfileRepository {
 
     suspend fun uploadProfileImage(uri: Uri): String {
         val uid = auth.currentUser!!.uid
-        val ref = storage.reference.child("profilePictures/$uid/profile.jpg")
 
-        // Delete old image first (if exists)
-        try {
-            ref.delete().await()
-        } catch (_: Exception) {
-            // File didn't exist, safe to ignore
-        }
+        val ref = storage.reference
+            .child("profilePictures")
+            .child(uid)
+            .child("profile_${System.currentTimeMillis()}.jpg")
 
-        // Upload new one
+        // Upload file (simple upload, not resumable)
         ref.putFile(uri).await()
 
         return ref.downloadUrl.await().toString()
     }
+
 
 
     suspend fun saveProfile(
